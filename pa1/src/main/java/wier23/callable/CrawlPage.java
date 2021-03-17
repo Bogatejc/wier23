@@ -1,11 +1,10 @@
-package callable;
+package wier23.callable;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang3.StringUtils;
@@ -14,44 +13,54 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class PageCrawl implements Callable<PageCrawl>
+public class CrawlPage implements Callable<CrawlPage>
 {
-    private final Logger logger = Logger.getLogger(PageCrawl.class.getName());
+    private final Logger logger = Logger.getLogger(CrawlPage.class.getName());
     static final int TIMEOUT = 60000;   // one minute
 
     private final URL url;
+    private int depth;
     private final Set<URL> urlList = new HashSet<>();
 
-    public PageCrawl(URL url) {
+    public CrawlPage(URL url, int depth) {
         this.url = url;
+        this.depth = depth;
     }
 
     @Override
-    public PageCrawl call() throws Exception {
+    public CrawlPage call() throws Exception {
         Document document;
+        logger.info("Visiting (" + depth + "): " + url.toString());
+
         document = Jsoup.parse(url, TIMEOUT);
-
-        Elements links = document.select("a[href]");
-
-        for (Element link : links) {
-            String href = link.attr("href");
-            if (StringUtils.isBlank(href) ||  href.startsWith("#")) {
-                continue;
-            }
-            try {
-                URL nextUrl = new URL(url, href);
-                // NOTE: the set will not store the same url twice, even if two different objects.
-                urlList.add(nextUrl);
-            } catch (MalformedURLException e) {
-                // just ignore bad URLs
-            }
-        }
+        processLinks(document.select("a[href]"));
         return this;
     }
 
-    public void dump() {
-        for (URL url1 : urlList) {
-            logger.log(Level.INFO, "Links to " + url1.toString());
+    private void processLinks(Elements links) {
+        for (Element link : links) {
+            String href = link.attr("href");
+
+            if (StringUtils.isBlank(href) ||  href.startsWith("#")) {
+                continue;
+            }
+
+            try {
+                URL nextUrl = new URL(url, href);
+                urlList.add(nextUrl);
+            } catch (MalformedURLException e) {
+                // ignore bad urls
+            }
         }
+    }
+
+    public Set<URL> getUrlList()
+    {
+        return urlList;
+    }
+
+    public int getDepth()
+    {
+        return depth;
     }
 }

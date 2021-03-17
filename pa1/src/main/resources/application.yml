@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: pa1
+  datasource:
+    url: jdbc:postgresql://ec2-54-155-226-153.eu-west-1.compute.amazonaws.com:5432/d7nip6mlk760pp
+    username: bpjocuggbdjdwy
+    password: cf4bed7c616c7ad1e39c69fc05a5e975a9d75edc6c065b7089acabe25f082d0f
+    driverClassName: org.postgresql.Driver
+    initialize: true
+    initialization-mode: always
+    hikari:
+      connectionTimeout: 200000
+      maximumPoolSize: 10
+      idle-timeout: 300000
+      minimum-idle: 1
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: create
+    open-in-view: false
+    properties:
+      hibernate:
+        temp:
+          use_jdbc_metadata_defaults: false
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    data:
+      jpa:
+        repositories:
+          bootstrap_mode: default
