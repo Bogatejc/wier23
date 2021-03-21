@@ -19,7 +19,7 @@ public class CrawlPage implements Callable<CrawlPage>
     static final int TIMEOUT = 60000;   // one minute
 
     private final URL url;
-    private int depth;
+    private final int depth;
     private final Set<URL> urlList = new HashSet<>();
 
     public CrawlPage(URL url, int depth) {

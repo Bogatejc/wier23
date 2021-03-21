@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import wier23.callable.CrawlPage;
-import wier23.manager.CrawlManager;
+import wier23.manager.CrawlManager2;
 
 public class TestGrabManager {
 
@@ -33,7 +33,7 @@ public class TestGrabManager {
 			shouldVisit = shouldVisit.and( (url, depth) -> depth < 5);
 			shouldVisit = shouldVisit.and( (url, depth) -> url.getPath().contains("obama"));
 
-		CrawlManager grabManager = new CrawlManager(15, shouldVisit);
+		CrawlManager2 grabManager = new CrawlManager2(15, shouldVisit);
 		StopWatch stopWatch = new StopWatch();
 
 		stopWatch.start();
@@ -80,7 +80,7 @@ public class TestGrabManager {
 			shouldVisit = shouldVisit.and(  (url, depth) -> depth < 2);
 			shouldVisit = shouldVisit.and(  (url, depth) -> !url.getPath().endsWith(".pdf"));
 
-		CrawlManager grabManager = new CrawlManager(SIZE, shouldVisit);
+		CrawlManager2 grabManager = new CrawlManager2(SIZE, shouldVisit);
 		Whitebox.setInternalState(grabManager, "executorService", mockExecutor);
 		grabManager.go(new URL("http://example.com"));
 
