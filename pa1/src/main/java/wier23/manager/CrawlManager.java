@@ -1,86 +1,69 @@
 package wier23.manager;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.LinkedList;
-import java.util.Queue;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.annotation.PostConstruct;
 
 import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
 
-import wier23.entity.Page;
-import wier23.enums.PageType;
+import wier23.Utils;
+import wier23.entity.Site;
+import wier23.service.FrontierService;
 import wier23.service.PageService;
+import wier23.service.SiteService;
 
 @Service
 public class CrawlManager
 {
     private final Logger logger = Logger.getLogger(CrawlManager.class.getName());
 
+    private final FrontierService frontierService;
+
     private final PageService pageService;
 
-    private Queue<Page> frontier;
+    private final SiteService siteService;
+
+    private HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
+
+    public CrawlManager(FrontierService frontierService, PageService pageService, SiteService siteService)
+    {
+        this.frontierService = frontierService;
+        this.pageService = pageService;
+        this.siteService = siteService;
+    }
 
     @PostConstruct
     private void postConstruct() {
         logger.log(Level.INFO, "Starting to crawl.");
+        run();
     }
 
-    public CrawlManager(PageService pageService) {
-        this.pageService = pageService;
-
-        // Fetch frontier from database
-        logger.log(Level.INFO, "Fetching frontier from database.");
-        frontier = pageService.getFrontier();
-
-        // If database has no pages for frontier, load the base pages
-        if (frontier.isEmpty()) {
-            logger.log(Level.WARNING, "No pages for frontier found in database, loading base pages.");
-            frontier = getBasePages();
-            logger.log(Level.WARNING, "Base pages successfully loaded!");
-        }
+    private void run() {
+        // TODO
     }
 
-    /**
-     * This method reads the file "baseUrls" in resource folder line by line and creates page objects for
-     * starting frontier.
-     * @return list of base pages
-     */
-    private LinkedList<Page> getBasePages() {
-        LinkedList<Page> basePages = new LinkedList<>();
+    private void submitUrl(String url) {
+        String domainName = Utils.getDomainFromUrl(url);
 
-        File baseUrls;
-        try {
-            baseUrls = ResourceUtils.getFile("classpath:baseUrls");
+        if (!domainsHashMap.containsKey(domainName)) {
+            domainsHashMap.put(domainName, LocalDateTime.now());
         }
-        catch (FileNotFoundException e)
-        {
-            logger.severe(e.getMessage());
-            return new LinkedList<>();
-        }
+        else {
+            Integer domainDelay = siteService.findByDomain(domainName)
+                    .map(Site::getDomainDelay)
+                    .orElse(5);
 
-        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(baseUrls))) {
-            while(bufferedReader.ready()) {
-                Page page = new Page();
-                page.setUrl(bufferedReader.readLine());
-                page.setPageType(PageType.FRONTIER);
-                basePages.add(page);
+            LocalDateTime lastAccessTime = domainsHashMap.get(domainName);
+            if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(domainDelay))) {
+
             }
 
         }
-        catch (IOException e) {
-            logger.severe(e.getMessage());
 
-        }
 
-        return basePages;
     }
 
 }

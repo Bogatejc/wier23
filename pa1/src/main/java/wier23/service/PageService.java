@@ -1,20 +1,25 @@
 package wier23.service;
 
-import java.util.LinkedList;
-import java.util.List;
+import java.util.Queue;
+import java.util.logging.Logger;
 
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
 import wier23.entity.Page;
 import wier23.enums.PageType;
+import wier23.repository.LinkRepository;
 import wier23.repository.PageRepository;
 
 @Service
 @AllArgsConstructor
 public class PageService
 {
+    private final Logger logger = Logger.getLogger(PageService.class.getName());
+
     private final PageRepository pageRepository;
+
+    private final LinkRepository linkRepository;
 
     public Page savePage(Page page) {
         return pageRepository.save(page);
@@ -32,7 +37,7 @@ public class PageService
         return pageRepository.existsPageByContentHash(contentHash);
     }
 
-    public LinkedList<Page> getFrontier() {
+    public Queue<Page> getFrontier() {
         return pageRepository.findAllByPageType(PageType.FRONTIER);
     }
 }

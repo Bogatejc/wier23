@@ -13,22 +13,22 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-public class CrawlPage implements Callable<CrawlPage>
+public class CrawlPage2 implements Callable<CrawlPage2>
 {
-    private final Logger logger = Logger.getLogger(CrawlPage.class.getName());
+    private final Logger logger = Logger.getLogger(CrawlPage2.class.getName());
     static final int TIMEOUT = 60000;   // one minute
 
     private final URL url;
     private final int depth;
     private final Set<URL> urlList = new HashSet<>();
 
-    public CrawlPage(URL url, int depth) {
+    public CrawlPage2(URL url, int depth) {
         this.url = url;
         this.depth = depth;
     }
 
     @Override
-    public CrawlPage call() throws Exception {
+    public CrawlPage2 call() throws Exception {
         Document document;
         logger.info("Visiting (" + depth + "): " + url.toString());
 

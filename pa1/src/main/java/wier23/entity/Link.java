@@ -1,8 +1,7 @@
 package wier23.entity;
 
-import java.io.Serializable;
-
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -16,14 +15,15 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Link implements Serializable
+public class Link
 {
-
     @Id
-    @ManyToOne(targetEntity =  Page.class, optional = false)
+    @GeneratedValue
+    private Long id;
+
+    @ManyToOne(targetEntity =  Page.class)
     private Page pageFrom;
 
-    @Id
     @ManyToOne(targetEntity =  Page.class, optional = false)
     private Page pageTo;
 

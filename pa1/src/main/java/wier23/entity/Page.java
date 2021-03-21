@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
@@ -33,6 +34,7 @@ import wier23.enums.PageType;
 public class Page
 {
     @Id
+    @GeneratedValue
     private Long id;
 
     private PageType pageType;
@@ -51,7 +53,7 @@ public class Page
     @Nullable
     private LocalDateTime accessedTime;
 
-    @ManyToOne(targetEntity =  Site.class, optional = false)
+    @ManyToOne(targetEntity =  Site.class)
     private Site site;
 
     @OneToMany(

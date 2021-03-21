@@ -3,6 +3,7 @@ package wier23.entity;
 import java.io.Serializable;
 
 import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 
@@ -20,6 +21,7 @@ import wier23.enums.DataType;
 public class PageData implements Serializable
 {
     @Id
+    @GeneratedValue
     private Long id;
 
     private byte[] data;

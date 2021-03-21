@@ -18,7 +18,7 @@ import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import wier23.callable.CrawlPage;
+import wier23.callable.CrawlPage2;
 import wier23.manager.CrawlManager2;
 
 public class TestGrabManager {
@@ -62,11 +62,11 @@ public class TestGrabManager {
 		urls.add(new URL("http://example.com/extra3"));
 
 		// mock out grab page so we can control urls returned
-		CrawlPage mockGrab = mock(CrawlPage.class);
+		CrawlPage2 mockGrab = mock(CrawlPage2.class);
 		when(mockGrab.getUrlList()).thenReturn(urls);
 
 		// mock a future object to return our grabber
-		Future<CrawlPage> mockFuture = mock(Future.class);
+		Future<CrawlPage2> mockFuture = mock(Future.class);
 		when(mockFuture.isDone()).thenReturn(true);
 		when(mockFuture.get()).thenReturn(mockGrab);
 

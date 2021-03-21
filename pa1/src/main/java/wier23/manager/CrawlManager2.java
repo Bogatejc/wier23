@@ -18,14 +18,14 @@ import java.util.function.BiPredicate;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import wier23.callable.CrawlPage;
+import wier23.callable.CrawlPage2;
 
 public class CrawlManager2
 {
     public static final int THREAD_COUNT = 5;
     private static final long PAUSE_TIME = 1000;
 
-    private final List<Future<CrawlPage>> futures = new ArrayList<>();
+    private final List<Future<CrawlPage2>> futures = new ArrayList<>();
     private final ExecutorService executorService = Executors.newFixedThreadPool(THREAD_COUNT);
 
     private final int maxUrls;
@@ -53,11 +53,11 @@ public class CrawlManager2
      */
     private boolean checkPageGrabs() throws InterruptedException {
         Thread.sleep(PAUSE_TIME);
-        Set<CrawlPage> pageSet = new HashSet<>();
-        Iterator<Future<CrawlPage>> iterator = futures.iterator();
+        Set<CrawlPage2> pageSet = new HashSet<>();
+        Iterator<Future<CrawlPage2>> iterator = futures.iterator();
 
         while (iterator.hasNext()) {
-            Future<CrawlPage> future = iterator.next();
+            Future<CrawlPage2> future = iterator.next();
             if (future.isDone()) {
                 iterator.remove();
                 try {
@@ -70,7 +70,7 @@ public class CrawlManager2
             }
         }
 
-        for (CrawlPage grabPage : pageSet) {
+        for (CrawlPage2 grabPage : pageSet) {
             addNewURLs(grabPage);
         }
 
@@ -84,7 +84,7 @@ public class CrawlManager2
      *
      * @param grabPage object containing the URL list
      */
-    private void addNewURLs(CrawlPage grabPage) {
+    private void addNewURLs(CrawlPage2 grabPage) {
         for (URL url : grabPage.getUrlList()) {
             if (url.toString().contains("#")) {
                 try {
@@ -118,8 +118,8 @@ public class CrawlManager2
     private void submitNewURL(URL url, int depth) {
         masterList.add(url);
 
-        CrawlPage grabPage = new CrawlPage(url, depth);
-        Future<CrawlPage> future = executorService.submit(grabPage);
+        CrawlPage2 grabPage = new CrawlPage2(url, depth);
+        Future<CrawlPage2> future = executorService.submit(grabPage);
         futures.add(future);
     }
 
