@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -48,8 +47,7 @@ public class CrawlManagerService
     }
 
     public void run() {
-        Page page;
-        while((page = frontierService.getNextPage()) != null || !futureList.isEmpty()) {
+        while(!frontierService.isEmpty() || !futureList.isEmpty()) {
 
             if (!futureList.isEmpty()) {
 
@@ -70,12 +68,14 @@ public class CrawlManagerService
                 }
             }
 
-            if (page != null) {
-                PageCrawl pageCrawl = new PageCrawl(page, driverQueue.poll());
-                Future<PageCrawl> future = executorService.submit(pageCrawl);
-                futureList.add(future);
+            if (!driverQueue.isEmpty()) {
+                Page page = frontierService.getNextPage();
+                if (page != null) {
+                    PageCrawl pageCrawl = new PageCrawl(page, driverQueue.poll());
+                    Future<PageCrawl> future = executorService.submit(pageCrawl);
+                    futureList.add(future);
+                }
             }
-
         }
     }
 }

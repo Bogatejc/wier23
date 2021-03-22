@@ -63,6 +63,15 @@ public class FrontierService
     }
 
     /**
+     * This method checks if frontier is empty.
+     * @return true, if frontier is empty; false, if frontier is not empty
+     */
+    public boolean isEmpty() {
+        return frontier.isEmpty();
+    }
+
+
+    /**
      * This method polls a page from the queue and checks if crawler is allowed to access it. If the crawler
      * is not allowed to access it, it re-adds it back into the queue and polls the next page.
      * @return the next page to be crawled
