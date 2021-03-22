@@ -2,6 +2,8 @@ package wier23.service;
 
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,14 +28,23 @@ public class CrawlManagerService
 
     private final Queue<ChromeDriver> driverQueue;
 
-    public CrawlManagerService(FrontierService frontierService)
+    private final ExecutorService executorService;
+
+    public CrawlManagerService(FrontierService frontierService, int threadCount)
     {
         this.frontierService = frontierService;
-        driverQueue = new LinkedList<>();
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
         chromeOptions = options;
+
+        executorService = Executors.newFixedThreadPool(threadCount);
+
+        driverQueue = new LinkedList<>();
+        for (int i = 0; i < threadCount; i++) {
+            driverQueue.add(new ChromeDriver(chromeOptions));
+        }
+
     }
 
     public void run() {
@@ -41,13 +52,6 @@ public class CrawlManagerService
         logger.log(Level.INFO, "Printing urls...");
         while((page = frontierService.getNextPage()) != null) {
             logger.log(Level.INFO, page.getUrl());
-        }
-    }
-
-    @PostConstruct
-    public void postConstruct() {
-        for (int i = 0; i < THREAD_COUNT; i++) {
-            driverQueue.add(new ChromeDriver(chromeOptions));
         }
     }
 }

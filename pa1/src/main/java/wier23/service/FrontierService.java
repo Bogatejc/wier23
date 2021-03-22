@@ -7,7 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,9 +34,9 @@ public class FrontierService
 
     private final SiteRepository siteRepository;
 
-    private final Queue<Page> frontier;
+    private final ConcurrentLinkedQueue<Page> frontier;
 
-    private HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
+    private final HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
 
     public FrontierService(PageRepository pageRepository, LinkRepository linkRepository, SiteRepository siteRepository) {
 
@@ -46,7 +46,7 @@ public class FrontierService
 
         // Fetch frontier from database
         logger.log(Level.INFO, "Fetching frontier from database.");
-        frontier = pageRepository.findAllByPageType(PageType.FRONTIER);
+        frontier = new ConcurrentLinkedQueue<>(pageRepository.findAllByPageType(PageType.FRONTIER));
 
         // If database has no pages for frontier, load the base pages
         if (frontier.isEmpty()) {
