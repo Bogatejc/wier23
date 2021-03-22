@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Queue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,11 +14,14 @@ import java.util.logging.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
+import wier23.Utils;
 import wier23.entity.Link;
 import wier23.entity.Page;
+import wier23.entity.Site;
 import wier23.enums.PageType;
 import wier23.repository.LinkRepository;
 import wier23.repository.PageRepository;
+import wier23.repository.SiteRepository;
 
 @Service
 public class FrontierService
@@ -27,12 +32,17 @@ public class FrontierService
 
     private final LinkRepository linkRepository;
 
+    private final SiteRepository siteRepository;
+
     private final Queue<Page> frontier;
 
-    public FrontierService(PageRepository pageRepository, LinkRepository linkRepository) {
+    private HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
+
+    public FrontierService(PageRepository pageRepository, LinkRepository linkRepository, SiteRepository siteRepository) {
 
         this.pageRepository = pageRepository;
         this.linkRepository = linkRepository;
+        this.siteRepository = siteRepository;
 
         // Fetch frontier from database
         logger.log(Level.INFO, "Fetching frontier from database.");
@@ -53,6 +63,40 @@ public class FrontierService
     }
 
     /**
+     * This method polls a page from the queue and checks if crawler is allowed to access it. If the crawler
+     * is not allowed to access it, it re-adds it back into the queue and polls the next page.
+     * @return the next page to be crawled
+     */
+    public Page getNextPage() {
+
+        while(!frontier.isEmpty()) {
+            Page polledPage = frontier.poll();
+
+            String domain = Utils.getDomainFromUrl(polledPage.getUrl());
+            if (!domainsHashMap.containsKey(domain)) {
+                domainsHashMap.put(domain, LocalDateTime.now());
+                return polledPage;
+            }
+            else {
+                Integer domainDelay = siteRepository.findByDomain(domain)
+                        .map(Site::getDomainDelay)
+                        .orElse(5);
+
+                // TODO check robots.txt for any other possible restrictions
+                LocalDateTime lastAccessTime = domainsHashMap.get(domain);
+                if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(domainDelay))) {
+                    domainsHashMap.put(domain, LocalDateTime.now());
+                    return polledPage;
+                }
+                else {
+                    frontier.add(polledPage);
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * This method checks if url already exists and updates database accordingly
      * In case the url does not exists, it adds it to frontier.
      * @param pageFrom Page where we found the url.
@@ -61,7 +105,6 @@ public class FrontierService
     private void addUrlToFrontier(Page pageFrom, String url) {
 
         pageRepository.findByUrl(url).ifPresentOrElse(page -> {
-            // TODO @jakobm Check if this works
 
             Link link = new Link();
             link.setPageFrom(pageFrom);
