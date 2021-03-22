@@ -26,11 +26,20 @@ public class Application
     }
 
     public static void main(String[] args) {
-        System.setProperty("webdriver.chrome.driver", "D:/Programs/Selenium/chromedriver.exe");
-        try {
-            threadCount = Integer.parseInt(args[0]);
+        try
+        {
+            if(args.length > 0)
+            {
+                System.setProperty("webdriver.chrome.driver", args[0]);
+                threadCount = Integer.parseInt(args[1]);
+            }
+            else
+            {
+                logger.severe("Chrome driver path was not specified!");
+                return;
+            }
         } catch (NullPointerException | NumberFormatException e) {
-            logger.severe("Invalid parameter for number of threads. Using default value (5).");
+            logger.severe("Invalid parameter for number of threads. Using default value (" + threadCount + ").");
         }
         SpringApplication.run(Application.class, args);
     }

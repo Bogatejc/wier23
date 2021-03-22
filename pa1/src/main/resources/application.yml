@@ -14,9 +14,9 @@ spring:
       idle-timeout: 300000
       minimum-idle: 1
   jpa:
-    show-sql: true
+    show-sql: false
     hibernate:
-      ddl-auto: create
+      ddl-auto: update
     open-in-view: false
     properties:
       hibernate:

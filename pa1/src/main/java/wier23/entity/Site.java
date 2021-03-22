@@ -2,7 +2,6 @@ package wier23.entity;
 
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -35,7 +34,6 @@ public class Site
 
     @OneToMany(
             targetEntity = Page.class,
-            cascade = CascadeType.ALL,
             mappedBy = "site",
             fetch = FetchType.LAZY
     )

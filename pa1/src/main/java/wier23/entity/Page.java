@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import javax.annotation.Nullable;
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -58,7 +57,6 @@ public class Page
 
     @OneToMany(
             targetEntity = Link.class,
-            cascade = CascadeType.ALL,
             mappedBy = "pageFrom",
             fetch = FetchType.LAZY
     )
@@ -66,7 +64,6 @@ public class Page
 
     @OneToMany(
             targetEntity = Link.class,
-            cascade = CascadeType.ALL,
             mappedBy = "pageTo",
             fetch = FetchType.LAZY
     )
@@ -74,7 +71,6 @@ public class Page
 
     @OneToMany(
             targetEntity = Image.class,
-            cascade = CascadeType.ALL,
             mappedBy = "page",
             fetch = FetchType.LAZY
     )
@@ -82,7 +78,6 @@ public class Page
 
     @OneToMany(
             targetEntity = PageData.class,
-            cascade = CascadeType.ALL,
             mappedBy = "page",
             fetch = FetchType.LAZY
     )

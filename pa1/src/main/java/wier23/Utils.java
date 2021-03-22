@@ -1,7 +1,9 @@
 package wier23;
 
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,5 +28,21 @@ public class Utils
         }
         String domain = uri.getHost();
         return domain.startsWith("www.") ? domain.substring(4) : domain;
+    }
+
+    /**
+     * This method converts URL to URI
+     * @return canonical url
+     */
+    public static String createCanonicalUrl(String url) throws MalformedURLException, URISyntaxException {
+        URL newUrl = new URL(url);
+        URI uri = new URI(newUrl.getProtocol(),
+                newUrl.getUserInfo(),
+                newUrl.getHost(),
+                newUrl.getPort(),
+                newUrl.getPath(),
+                newUrl.getQuery(),
+                newUrl.getRef());
+        return uri.toString();
     }
 }

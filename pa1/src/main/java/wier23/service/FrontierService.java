@@ -7,9 +7,13 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
@@ -86,18 +90,21 @@ public class FrontierService
                 domainsHashMap.put(domain, LocalDateTime.now());
                 return polledPage;
             }
-            else {
+            else
+            {
                 Integer domainDelay = siteRepository.findByDomain(domain)
                         .map(Site::getDomainDelay)
                         .orElse(5);
 
                 // TODO check robots.txt for any other possible restrictions
                 LocalDateTime lastAccessTime = domainsHashMap.get(domain);
-                if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(domainDelay))) {
+                if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(domainDelay)))
+                {
                     domainsHashMap.put(domain, LocalDateTime.now());
                     return polledPage;
                 }
-                else {
+                else
+                {
                     frontier.add(polledPage);
                 }
             }
@@ -105,34 +112,49 @@ public class FrontierService
         return null;
     }
 
-    /**
-     * This method checks if url already exists and updates database accordingly
-     * In case the url does not exists, it adds it to frontier.
-     * @param pageFrom Page where we found the url.
-     * @param url The url we would like to add
-     */
-    private void addUrlToFrontier(Page pageFrom, String url) {
+    public void saveLinks(Page fromPage, List<Page> pages)
+    {
+        List<Link> links = pages.stream()
+                .map(page -> {
+                    Link link = new Link();
+                    link.setPageFrom(fromPage);
+                    link.setPageTo(page);
+                    return link;
+                })
+                .collect(Collectors.toList());
+        linkRepository.saveAll(links);
+    }
 
-        pageRepository.findByUrl(url).ifPresentOrElse(page -> {
-
-            Link link = new Link();
-            link.setPageFrom(pageFrom);
-            link.setPageTo(page);
-
-            linkRepository.save(link);
-        }, () -> {
+    public void saveToFrontier(Page fromPage, List<String> urls)
+    {
+        List<Page> pageList = new LinkedList<>();
+        List<Link> linkList = new LinkedList<>();
+        for(String url : urls)
+        {
             Page page = new Page();
             page.setUrl(url);
             page.setPageType(PageType.FRONTIER);
-            page = pageRepository.save(page);
+            pageList.add(page);
 
             Link link = new Link();
-            link.setPageFrom(pageFrom);
+            link.setPageFrom(fromPage);
             link.setPageTo(page);
-            linkRepository.save(link);
+            linkList.add(link);
 
             frontier.add(page);
-        });
+        }
+        pageRepository.saveAll(pageList);
+        linkRepository.saveAll(linkList);
+    }
+
+    /**
+     * Check if page with this url exists
+     * @param url
+     * @return boolean
+     */
+    public Optional<Page> checkUrl(String url)
+    {
+        return pageRepository.findByUrl(url);
     }
 
     /**
@@ -151,16 +173,25 @@ public class FrontierService
             return;
         }
 
-        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(baseUrls))) {
+        try(BufferedReader bufferedReader = new BufferedReader(new FileReader(baseUrls)))
+        {
+            List<String> urlList = new LinkedList<>();
             while(bufferedReader.ready()) {
                 String url = bufferedReader.readLine();
-                addUrlToFrontier(basePage, url);
+                try {
+                    url = Utils.createCanonicalUrl(url);
+                    urlList.add(url);
+                }
+                catch (Exception e)
+                {
+                    logger.warning(url + " " + e.getMessage());
+                }
             }
-
+            saveToFrontier(basePage, urlList);
         }
-        catch (IOException e) {
+        catch (IOException e)
+        {
             logger.severe(e.getMessage());
-
         }
     }
 }
