@@ -24,9 +24,16 @@ public class PageCrawl implements Callable<PageCrawl>
     {
         logger.info("Visiting: " + page.getUrl());
         chromeDriver.get(page.getUrl());
+
+        // TODO parse the page and add the urls to the frontier
+
         return this;
     }
 
+    /**
+     * This method returns crawler's chrome driver so it can be reused.
+     * @return chrome driver
+     */
     public ChromeDriver getChromeDriver()
     {
         return chromeDriver;

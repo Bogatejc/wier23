@@ -13,6 +13,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+// TODO delete this class
 public class CrawlPage2 implements Callable<CrawlPage2>
 {
     private final Logger logger = Logger.getLogger(CrawlPage2.class.getName());

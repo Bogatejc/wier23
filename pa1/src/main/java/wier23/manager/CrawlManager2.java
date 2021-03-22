@@ -20,6 +20,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import wier23.callable.CrawlPage2;
 
+// TODO delete this class
 public class CrawlManager2
 {
     public static final int THREAD_COUNT = 5;

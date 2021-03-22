@@ -47,8 +47,10 @@ public class CrawlManagerService
     }
 
     public void run() {
+        // Run until frontier is empty and all crawlers have completed their job.
         while(!frontierService.isEmpty() || !futureList.isEmpty()) {
 
+            // Check if any crawlers have ended their job and save the data.
             if (!futureList.isEmpty()) {
 
                 Future<PageCrawl> polledFuture = futureList.poll();
@@ -56,6 +58,7 @@ public class CrawlManagerService
                     try
                     {
                         PageCrawl pageCrawl = polledFuture.get();
+                        // TODO save the data
                         driverQueue.add(pageCrawl.getChromeDriver());
                     }
                     catch (InterruptedException | ExecutionException e)
@@ -68,6 +71,7 @@ public class CrawlManagerService
                 }
             }
 
+            // Check if there is a free thread and create a new crawler
             if (!driverQueue.isEmpty()) {
                 Page page = frontierService.getNextPage();
                 if (page != null) {
