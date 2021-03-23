@@ -9,11 +9,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
@@ -23,34 +21,31 @@ import wier23.entity.Link;
 import wier23.entity.Page;
 import wier23.entity.Site;
 import wier23.enums.PageType;
-import wier23.repository.LinkRepository;
-import wier23.repository.PageRepository;
-import wier23.repository.SiteRepository;
 
 @Service
 public class FrontierService
 {
     private final Logger logger = Logger.getLogger(FrontierService.class.getName());
 
-    private final PageRepository pageRepository;
-
-    private final LinkRepository linkRepository;
-
-    private final SiteRepository siteRepository;
-
     private final ConcurrentLinkedQueue<Page> frontier;
 
     private final HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
 
-    public FrontierService(PageRepository pageRepository, LinkRepository linkRepository, SiteRepository siteRepository)
+    private final PageService pageService;
+
+    private final SiteService siteService;
+
+    private final LinkService linkService;
+
+    public FrontierService(PageService pageService, SiteService siteService, LinkService linkService)
     {
-        this.pageRepository = pageRepository;
-        this.linkRepository = linkRepository;
-        this.siteRepository = siteRepository;
+        this.pageService = pageService;
+        this.siteService = siteService;
+        this.linkService = linkService;
 
         // Fetch frontier from database
         logger.log(Level.INFO, "Fetching frontier from database.");
-        frontier = new ConcurrentLinkedQueue<>(pageRepository.findAllByPageType(PageType.FRONTIER));
+        frontier = new ConcurrentLinkedQueue<>(pageService.getFrontier());
 
         // If database has no pages for frontier, load the base pages
         if (frontier.isEmpty())
@@ -60,7 +55,7 @@ public class FrontierService
             Page page = new Page();
             page.setUrl("base");
             page.setPageType(PageType.HTML);
-            pageRepository.saveAndFlush(page);
+            pageService.savePage(page);
 
             getBasePages(page);
             logger.log(Level.WARNING, "Base pages successfully loaded!");
@@ -95,7 +90,7 @@ public class FrontierService
             }
             else
             {
-                Integer domainDelay = siteRepository.findByDomain(domain)
+                Integer domainDelay = siteService.findByDomain(domain)
                         .map(Site::getDomainDelay)
                         .orElse(5);
 
@@ -115,49 +110,8 @@ public class FrontierService
         return null;
     }
 
-    public void saveLinks(Page fromPage, List<Page> pages)
-    {
-        List<Link> links = pages.stream()
-                .map(page -> {
-                    Link link = new Link();
-                    link.setPageFrom(fromPage);
-                    link.setPageTo(page);
-                    return link;
-                })
-                .collect(Collectors.toList());
-        linkRepository.saveAll(links);
-    }
-
-    public void saveToFrontier(Page fromPage, List<String> urls)
-    {
-        List<Page> pageList = new LinkedList<>();
-        List<Link> linkList = new LinkedList<>();
-        for(String url : urls)
-        {
-            Page page = new Page();
-            page.setUrl(url);
-            page.setPageType(PageType.FRONTIER);
-            pageList.add(page);
-
-            Link link = new Link();
-            link.setPageFrom(fromPage);
-            link.setPageTo(page);
-            linkList.add(link);
-
-            frontier.add(page);
-        }
-        pageRepository.saveAll(pageList);
-        linkRepository.saveAll(linkList);
-    }
-
-    /**
-     * Check if page with this url exists
-     * @param url
-     * @return boolean
-     */
-    public Optional<Page> checkUrl(String url)
-    {
-        return pageRepository.findByUrl(url);
+    public void addToFrontier(Page page) {
+        frontier.add(page);
     }
 
     /**
@@ -180,20 +134,33 @@ public class FrontierService
 
         try(BufferedReader bufferedReader = new BufferedReader(new FileReader(baseUrls)))
         {
-            List<String> urlList = new LinkedList<>();
+            List<Page> pagesList = new LinkedList<>();
+            List<Link> linksList = new LinkedList<>();
+
             while(bufferedReader.ready()) {
                 String url = bufferedReader.readLine();
                 try
                 {
-                    url = Utils.createCanonicalUrl(url);
-                    urlList.add(url);
+                    Page newPage = new Page();
+                    newPage.setUrl(url);
+                    newPage.setPageType(PageType.FRONTIER);
+                    pagesList.add(newPage);
+                    addToFrontier(newPage);
+
+                    Link link = new Link();
+                    link.setPageFrom(basePage);
+                    link.setPageTo(newPage);
+                    linksList.add(link);
                 }
                 catch (Exception e)
                 {
                     logger.warning(url + " " + e.getMessage());
                 }
             }
-            saveToFrontier(basePage, urlList);
+
+            pageService.saveAllPages(pagesList);
+            linkService.saveAllLinks(linksList);
+
         }
         catch (IOException e)
         {

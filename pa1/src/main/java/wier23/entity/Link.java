@@ -1,6 +1,7 @@
 package wier23.entity;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
@@ -21,10 +22,17 @@ public class Link
     @GeneratedValue
     private Long id;
 
-    @ManyToOne(targetEntity =  Page.class)
+    @ManyToOne(
+            targetEntity =  Page.class,
+            fetch = FetchType.LAZY
+    )
     private Page pageFrom;
 
-    @ManyToOne(targetEntity =  Page.class, optional = false)
+    @ManyToOne(
+            targetEntity =  Page.class,
+            optional = false,
+            fetch = FetchType.LAZY
+    )
     private Page pageTo;
 
 }

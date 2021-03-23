@@ -37,4 +37,11 @@ public class Site
     )
     private Set<Page> pages;
 
+    @OneToOne(
+            targetEntity = RobotRules.class,
+            fetch = FetchType.EAGER,
+            orphanRemoval = true
+    )
+    private RobotRules robotRules;
+
 }

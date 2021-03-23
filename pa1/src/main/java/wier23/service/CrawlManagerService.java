@@ -27,17 +27,20 @@ public class CrawlManagerService
 
     private final SiteService siteService;
 
+    private final LinkService linkService;
+
     private final Queue<ChromeDriver> driverQueue;
 
     private final ExecutorService executorService;
 
     private final Queue<Future<PageCrawl>> futureList;
 
-    public CrawlManagerService(FrontierService frontierService, PageService pageService, SiteService siteService, int threadCount)
+    public CrawlManagerService(FrontierService frontierService, PageService pageService, SiteService siteService, LinkService linkService, int threadCount)
     {
         this.frontierService = frontierService;
         this.pageService = pageService;
         this.siteService = siteService;
+        this.linkService = linkService;
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
@@ -71,6 +74,7 @@ public class CrawlManagerService
                     catch (InterruptedException | ExecutionException e)
                     {
                         logger.severe(e.getMessage());
+                        e.printStackTrace();
                     }
                 }
                 else
@@ -85,7 +89,7 @@ public class CrawlManagerService
                 Page page = frontierService.getNextPage();
                 if (page != null)
                 {
-                    PageCrawl pageCrawl = new PageCrawl(page, driverQueue.poll(), frontierService, pageService, siteService);
+                    PageCrawl pageCrawl = new PageCrawl(page, driverQueue.poll(), frontierService, pageService, siteService, linkService);
                     Future<PageCrawl> future = executorService.submit(pageCrawl);
                     futureList.add(future);
                 }

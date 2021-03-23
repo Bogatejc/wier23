@@ -1,14 +1,13 @@
 package wier23;
 
-import wier23.dtos.RobotsTxt;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import wier23.dtos.RobotsTxt;
 
 public class Utils
 {
@@ -51,6 +50,10 @@ public class Utils
 
     public static RobotsTxt parseRobotsTxt(String robotsContent)
     {
+//        TODO maybe use this
+//        SimpleRobotRulesParser simpleRobotRulesParser = new SimpleRobotRulesParser();
+//        simpleRobotRulesParser.parseContent();
+
         if(robotsContent.isEmpty() || robotsContent == null)
         {
             return null;

@@ -1,20 +1,24 @@
 package wier23.callable;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
+import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import wier23.Utils;
 import wier23.dtos.RobotsTxt;
+import wier23.entity.Link;
 import wier23.entity.Page;
 import wier23.entity.Site;
 import wier23.enums.PageType;
 import wier23.service.FrontierService;
+import wier23.service.LinkService;
 import wier23.service.PageService;
 import wier23.service.SiteService;
 
@@ -25,92 +29,100 @@ public class PageCrawl implements Callable<PageCrawl>
     private final FrontierService frontierService;
     private final PageService pageService;
     private final SiteService siteService;
-    private final ChromeDriver chromeDriver;
-    private final Page page;
-    private List<String> urlList;
-    private List<Page> linkList;
+    private final LinkService linkService;
 
-    public PageCrawl(Page page, ChromeDriver chromeDriver, FrontierService frontierService, PageService pageService, SiteService siteService)
+    private final ChromeDriver chromeDriver;
+
+    private final Page page;
+    private final HashMap<String, Page> newPagesHashMap;
+    private final List<Link> linksList;
+
+    public PageCrawl(Page page, ChromeDriver chromeDriver, FrontierService frontierService, PageService pageService, SiteService siteService, LinkService linkService)
     {
-        this.urlList = new LinkedList<>();
-        this.linkList = new LinkedList<>();
+        this.newPagesHashMap = new HashMap<>();
+        this.linksList = new LinkedList<>();
         this.frontierService = frontierService;
         this.pageService = pageService;
         this.siteService = siteService;
+        this.linkService = linkService;
         this.chromeDriver = chromeDriver;
         this.page = page;
     }
-
     @Override
     public PageCrawl call()
     {
         /*
          * First we check the domain if there are any restrictions for page accessing
          */
+
         String domain = Utils.getDomainFromUrl(page.getUrl());
-        logger.info("Začenjam: " + page.getUrl());
-        Site site;
-        if(siteService.findByDomain(domain).isPresent())
-        {
-            site = siteService.findByDomain(domain).get();
-            if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
-            {
-                RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
-                // TODO check if link is allowed etc.
-            }
-        }
-        else
-        {
-            chromeDriver.get("http://" + domain + "/robots.txt");
-            site = new Site();
-            site.setDomain(domain);
-            if(!chromeDriver.getTitle().contains("404") && !chromeDriver.findElementByTagName("body").getText().contains("404"))
-            {
-                site.setRobotsContent(chromeDriver.findElementByTagName("body").getText());
-            }
-        }
-
-
-
         logger.info("Visiting: " + page.getUrl());
-        chromeDriver.get(page.getUrl());
+
+        Site site = getOrCreateSite(domain);
+        if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
+        {
+            RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
+            // TODO check if link is allowed etc.
+        }
+
+//        logger.info("Access time: " + LocalDateTime.now());
+        try {
+            chromeDriver.get(page.getUrl());
+        } catch (WebDriverException e) {
+            logger.warning(e.getMessage());
+            logger.warning("Removing page from database.");
+
+            pageService.deletePage(page);
+
+            return this;
+        }
+
         page.setAccessedTime(LocalDateTime.now());
         page.setPageType(PageType.HTML);
-        logger.info("Access time: " + LocalDateTime.now());
+        page.setSite(site);
 
-        // TODO parse the page and add the urls to the frontier
-        List<WebElement> aTags = chromeDriver.findElementsByTagName("a");
-        for(WebElement tag : aTags)
-        {
-            String link = tag.getAttribute("href");
-            try
-            {
-                if(link.startsWith("/"))
-                {
-                    link = page.getUrl() + link;
-                }
-                checkAndSaveLink(link);
-            }
-            catch (Exception e)
-            {
-                // ignore bad urls
-            }
-        }
-        List<WebElement> onclickElements = chromeDriver.findElementsByXPath("//*[@onclick]");
-        for(WebElement onclickEl : onclickElements)
-        {
-            String onclickAttr = onclickEl.getAttribute("onclick");
-            if(onclickAttr.startsWith("location.href"))
-            {
-                String pth = onclickAttr.substring(14);
+        // TODO CHECK IF DUPLICATE
 
-//                logger.info(onclickAttr);
-            }
-            else if(onclickAttr.startsWith("document.location"))
-            {
-//                logger.info(onclickAttr);
-            }
-        }
+        extractUrlsByATag();
+
+//        extractUrlsByOnClickElements();
+//
+//        extractUrlsByImgTags();
+
+        pageService.savePage(page);
+
+        pageService.saveAllPages(newPagesHashMap.values());
+
+        linkService.saveAllLinks(linksList);
+
+        return this;
+    }
+
+    private Site getOrCreateSite(String domain)
+    {
+        return siteService.findByDomain(domain)
+                .orElseGet(() -> {
+                    Site newSite = new Site();
+                    try
+                    {
+                        chromeDriver.get("http://" + domain + "/robots.txt");
+
+                        if (!chromeDriver.getTitle().contains("404") && !chromeDriver.findElementByTagName("body").getText().contains("404"))
+                        {
+                            newSite.setRobotsContent(chromeDriver.findElementByTagName("body").getText());
+                        }
+
+                    }
+                    catch (WebDriverException e)
+                    {
+                        // domain doesn't have robots.txt, so leave it as null
+                    }
+                    return siteService.saveSite(newSite);
+                });
+    }
+
+    private void extractUrlsByImgTags()
+    {
         List<WebElement> imgTags = chromeDriver.findElementsByTagName("img");
         for(WebElement imgTag : imgTags)
         {
@@ -128,35 +140,100 @@ public class PageCrawl implements Callable<PageCrawl>
                 // ignore bad urls and base64 encoded images
             }
         }
+    }
 
-        pageService.savePage(page);
-        siteService.saveSite(site);
-        frontierService.saveLinks(page, linkList);
-        frontierService.saveToFrontier(page, urlList);
+    private void extractUrlsByOnClickElements()
+    {
+        List<WebElement> onclickElements = chromeDriver.findElementsByXPath("//*[@onclick]");
+        for(WebElement onclickEl : onclickElements)
+        {
+            String onclickAttr = onclickEl.getAttribute("onclick");
+            if(onclickAttr.startsWith("location.href"))
+            {
+                String pth = onclickAttr.substring(14);
 
-        return this;
+//                logger.info(onclickAttr);
+            }
+            else if(onclickAttr.startsWith("document.location"))
+            {
+//                logger.info(onclickAttr);
+            }
+        }
+    }
+
+    private void extractUrlsByATag()
+    {
+        try {
+            chromeDriver.findElementsByTagName("a").forEach(tag -> {
+                String url = tag.getAttribute("href");
+                try
+                {
+                    if(url.startsWith("/"))
+                    {
+                        url = page.getUrl() + url;
+                    }
+                    checkAndAddToList(url);
+                }
+                catch (Exception e)
+                {
+                    // ignore bad urls
+                }
+            });
+
+        }
+        catch (WebDriverException e) {
+            logger.warning(e.getMessage());
+        }
     }
 
     /**
      * This method gets url, converts it to a canonical url and adds it to the url list
-     * @param link
+     * @param url
      */
-    private void checkAndSaveLink(String link)
+    private void checkAndAddToList(String url)
     {
+        String canonicalUrl;
         try
         {
-            link = Utils.createCanonicalUrl(link);
+            canonicalUrl = Utils.createCanonicalUrl(url);
         }
         catch (Exception e)
         {
-            logger.warning(link + " " + e.getMessage());
+//            logger.warning(url + " " + e.getMessage());
+            return;
         }
 
-        String finalLink = link;
-        frontierService
-                .checkUrl(finalLink)
-                .ifPresentOrElse(pageLink -> linkList.add(pageLink),
-                        () -> urlList.add(finalLink));
+        if (newPagesHashMap.containsKey(canonicalUrl)) {
+            Link link = new Link();
+            link.setPageFrom(page);
+            link.setPageTo(newPagesHashMap.get(canonicalUrl));
+            linksList.add(link);
+            return;
+        }
+
+        pageService.findByUrl(canonicalUrl)
+                .ifPresentOrElse(
+                        existingPage -> {
+                            Link link = new Link();
+                            link.setPageFrom(page);
+                            link.setPageTo(existingPage);
+                            linksList.add(link);
+                        },
+                        () -> {
+                            Page newPage = new Page();
+                            newPage.setUrl(url);
+                            newPage.setPageType(PageType.FRONTIER);
+
+                            Link link = new Link();
+                            link.setPageFrom(page);
+                            link.setPageTo(newPage);
+
+                            linksList.add(link);
+                            newPagesHashMap.put(canonicalUrl, newPage);
+
+                            frontierService.addToFrontier(newPage);
+                        }
+                );
     }
 
     /**
@@ -166,24 +243,5 @@ public class PageCrawl implements Callable<PageCrawl>
     public ChromeDriver getChromeDriver()
     {
         return chromeDriver;
-    }
-
-    /**
-     * This method returns a list of pages with crawled links.
-     * @return pagesList
-     */
-    public List<String> getUrlList()
-    {
-        return urlList;
-    }
-
-    /**
-     * This method returns page we just crawled with some updated fields.
-     * @return page
-     */
-
-    public Page getPage()
-    {
-        return page;
     }
 }
