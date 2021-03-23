@@ -25,16 +25,19 @@ public class CrawlManagerService
 
     private final PageService pageService;
 
+    private final SiteService siteService;
+
     private final Queue<ChromeDriver> driverQueue;
 
     private final ExecutorService executorService;
 
     private final Queue<Future<PageCrawl>> futureList;
 
-    public CrawlManagerService(FrontierService frontierService, PageService pageService, int threadCount)
+    public CrawlManagerService(FrontierService frontierService, PageService pageService, SiteService siteService, int threadCount)
     {
         this.frontierService = frontierService;
         this.pageService = pageService;
+        this.siteService = siteService;
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
@@ -49,15 +52,17 @@ public class CrawlManagerService
 
     }
 
-    public void run() {
+    public void run()
+    {
         // Run until frontier is empty and all crawlers have completed their job.
-        while(!frontierService.isEmpty() || !futureList.isEmpty()) {
-
+        while(!frontierService.isEmpty() || !futureList.isEmpty())
+        {
             // Check if any crawlers have ended their job and save the data.
-            if (!futureList.isEmpty()) {
-
+            if (!futureList.isEmpty())
+            {
                 Future<PageCrawl> polledFuture = futureList.poll();
-                if (polledFuture.isDone()) {
+                if (polledFuture.isDone())
+                {
                     try
                     {
                         PageCrawl pageCrawl = polledFuture.get();
@@ -68,16 +73,19 @@ public class CrawlManagerService
                         logger.severe(e.getMessage());
                     }
                 }
-                else {
+                else
+                {
                     futureList.add(polledFuture);
                 }
             }
 
             // Check if there is a free thread and create a new crawler
-            if (!driverQueue.isEmpty()) {
+            if (!driverQueue.isEmpty())
+            {
                 Page page = frontierService.getNextPage();
-                if (page != null) {
-                    PageCrawl pageCrawl = new PageCrawl(page, driverQueue.poll(), frontierService, pageService);
+                if (page != null)
+                {
+                    PageCrawl pageCrawl = new PageCrawl(page, driverQueue.poll(), frontierService, pageService, siteService);
                     Future<PageCrawl> future = executorService.submit(pageCrawl);
                     futureList.add(future);
                 }

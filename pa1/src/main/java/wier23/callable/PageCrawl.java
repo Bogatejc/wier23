@@ -10,28 +10,33 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 
 import wier23.Utils;
+import wier23.dtos.RobotsTxt;
 import wier23.entity.Page;
+import wier23.entity.Site;
 import wier23.enums.PageType;
 import wier23.service.FrontierService;
 import wier23.service.PageService;
+import wier23.service.SiteService;
 
 public class PageCrawl implements Callable<PageCrawl>
 {
     private final Logger logger = Logger.getLogger(PageCrawl.class.getName());
 
-    private final PageService pageService;
     private final FrontierService frontierService;
+    private final PageService pageService;
+    private final SiteService siteService;
     private final ChromeDriver chromeDriver;
     private final Page page;
     private List<String> urlList;
     private List<Page> linkList;
 
-    public PageCrawl(Page page, ChromeDriver chromeDriver, FrontierService frontierService, PageService pageService)
+    public PageCrawl(Page page, ChromeDriver chromeDriver, FrontierService frontierService, PageService pageService, SiteService siteService)
     {
         this.urlList = new LinkedList<>();
         this.linkList = new LinkedList<>();
-        this.pageService = pageService;
         this.frontierService = frontierService;
+        this.pageService = pageService;
+        this.siteService = siteService;
         this.chromeDriver = chromeDriver;
         this.page = page;
     }
@@ -39,6 +44,34 @@ public class PageCrawl implements Callable<PageCrawl>
     @Override
     public PageCrawl call()
     {
+        /*
+         * First we check the domain if there are any restrictions for page accessing
+         */
+        String domain = Utils.getDomainFromUrl(page.getUrl());
+        logger.info("Začenjam: " + page.getUrl());
+        Site site;
+        if(siteService.findByDomain(domain).isPresent())
+        {
+            site = siteService.findByDomain(domain).get();
+            if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
+            {
+                RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
+                // TODO check if link is allowed etc.
+            }
+        }
+        else
+        {
+            chromeDriver.get("http://" + domain + "/robots.txt");
+            site = new Site();
+            site.setDomain(domain);
+            if(!chromeDriver.getTitle().contains("404") && !chromeDriver.findElementByTagName("body").getText().contains("404"))
+            {
+                site.setRobotsContent(chromeDriver.findElementByTagName("body").getText());
+            }
+        }
+
+
+
         logger.info("Visiting: " + page.getUrl());
         chromeDriver.get(page.getUrl());
         page.setAccessedTime(LocalDateTime.now());
@@ -52,7 +85,8 @@ public class PageCrawl implements Callable<PageCrawl>
             String link = tag.getAttribute("href");
             try
             {
-                if(link.startsWith("/")){
+                if(link.startsWith("/"))
+                {
                     link = page.getUrl() + link;
                 }
                 checkAndSaveLink(link);
@@ -69,6 +103,7 @@ public class PageCrawl implements Callable<PageCrawl>
             if(onclickAttr.startsWith("location.href"))
             {
                 String pth = onclickAttr.substring(14);
+
 //                logger.info(onclickAttr);
             }
             else if(onclickAttr.startsWith("document.location"))
@@ -82,10 +117,11 @@ public class PageCrawl implements Callable<PageCrawl>
             String imgLink = imgTag.getAttribute("src");
             try
             {
-                if(imgLink.startsWith("/")){
+                if(imgLink.startsWith("/"))
+                {
                     imgLink = page.getUrl() + imgLink;
                 }
-//                page.getImages().add(new Image());
+                // TODO add image to page data
             }
             catch (Exception e)
             {
@@ -94,6 +130,7 @@ public class PageCrawl implements Callable<PageCrawl>
         }
 
         pageService.savePage(page);
+        siteService.saveSite(site);
         frontierService.saveLinks(page, linkList);
         frontierService.saveToFrontier(page, urlList);
 
@@ -101,10 +138,11 @@ public class PageCrawl implements Callable<PageCrawl>
     }
 
     /**
-     *
+     * This method gets url, converts it to a canonical url and adds it to the url list
      * @param link
      */
-    private void checkAndSaveLink(String link) {
+    private void checkAndSaveLink(String link)
+    {
         try
         {
             link = Utils.createCanonicalUrl(link);

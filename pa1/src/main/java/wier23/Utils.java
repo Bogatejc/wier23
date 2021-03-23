@@ -1,9 +1,12 @@
 package wier23;
 
+import wier23.dtos.RobotsTxt;
+
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -45,4 +48,42 @@ public class Utils
                 newUrl.getRef());
         return uri.toString();
     }
+
+    public static RobotsTxt parseRobotsTxt(String robotsContent)
+    {
+        if(robotsContent.isEmpty() || robotsContent == null)
+        {
+            return null;
+        }
+        RobotsTxt robotsTxt = new RobotsTxt();
+        for(String line : robotsContent.split("\n"))
+        {
+            line = line.trim();
+
+            // check for allowed pages
+            if(line.matches("^([Aa]llow:) (\\/.*)$"))
+            {
+                robotsTxt.getAllowedPages().add(line.split("^[^:]*:\\s*")[1]);
+            }
+            // check for disallowed pages
+            if(line.matches("^([Dd]isallow:) (\\/.*)$"))
+            {
+                robotsTxt.getDisallowedPages().add(line.split("^[^:]*:\\s*")[1]);
+            }
+            // check for sitemap
+            if(line.matches("^([Ss]itemap:) (.*)$"))
+            {
+                // TODO poprav tole, k ne dela če sta v isti vrstici in Disallow in Sitemap :(
+                robotsTxt.getSitemaps().add(line.split("^[^:]*:\\s*")[1]);
+            }
+            // check for crawl-delay pages
+            if(line.matches("^([Cc]rawl-delay:) (.*)$"))
+            {
+                robotsTxt.setCrawlDelay(Integer.parseInt(line.split("^[^:]*:\\s*")[1]));
+            }
+        }
+        return robotsTxt;
+    }
+
+
 }

@@ -2,11 +2,7 @@ package wier23.entity;
 
 import java.util.Set;
 
-import javax.persistence.Entity;
-import javax.persistence.FetchType;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -26,8 +22,10 @@ public class Site
 
     private String domain;
 
+    @Column(columnDefinition = "TEXT")
     private String robotsContent;
 
+    @Column(columnDefinition = "TEXT")
     private String sitemapContent;
 
     private Integer domainDelay = 5;

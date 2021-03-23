@@ -17,4 +17,9 @@ public class SiteService
     public Optional<Site> findByDomain(String domain) {
         return siteRepository.findByDomain(domain);
     }
+
+    public Site saveSite(Site site)
+    {
+        return siteRepository.save(site);
+    }
 }

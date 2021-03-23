@@ -42,8 +42,8 @@ public class FrontierService
 
     private final HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
 
-    public FrontierService(PageRepository pageRepository, LinkRepository linkRepository, SiteRepository siteRepository) {
-
+    public FrontierService(PageRepository pageRepository, LinkRepository linkRepository, SiteRepository siteRepository)
+    {
         this.pageRepository = pageRepository;
         this.linkRepository = linkRepository;
         this.siteRepository = siteRepository;
@@ -53,7 +53,8 @@ public class FrontierService
         frontier = new ConcurrentLinkedQueue<>(pageRepository.findAllByPageType(PageType.FRONTIER));
 
         // If database has no pages for frontier, load the base pages
-        if (frontier.isEmpty()) {
+        if (frontier.isEmpty())
+        {
             logger.log(Level.WARNING, "No pages for frontier found in database, loading base pages.");
 
             Page page = new Page();
@@ -80,13 +81,15 @@ public class FrontierService
      * is not allowed to access it, it re-adds it back into the queue and polls the next page.
      * @return the next page to be crawled
      */
-    public Page getNextPage() {
-
-        while(!frontier.isEmpty()) {
+    public Page getNextPage()
+    {
+        while(!frontier.isEmpty())
+        {
             Page polledPage = frontier.poll();
 
             String domain = Utils.getDomainFromUrl(polledPage.getUrl());
-            if (!domainsHashMap.containsKey(domain)) {
+            if (!domainsHashMap.containsKey(domain))
+            {
                 domainsHashMap.put(domain, LocalDateTime.now());
                 return polledPage;
             }
@@ -162,9 +165,11 @@ public class FrontierService
      * starting frontier.
      * @return list of base pages
      */
-    public void getBasePages(Page basePage) {
+    public void getBasePages(Page basePage)
+    {
         File baseUrls;
-        try {
+        try
+        {
             baseUrls = ResourceUtils.getFile("classpath:baseUrls");
         }
         catch (FileNotFoundException e)
@@ -178,7 +183,8 @@ public class FrontierService
             List<String> urlList = new LinkedList<>();
             while(bufferedReader.ready()) {
                 String url = bufferedReader.readLine();
-                try {
+                try
+                {
                     url = Utils.createCanonicalUrl(url);
                     urlList.add(url);
                 }
