@@ -7,10 +7,14 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
+
+import javax.annotation.PreDestroy;
 
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.stereotype.Service;
 
 import wier23.callable.PageCrawl;
@@ -50,7 +54,14 @@ public class CrawlManagerService
 
         driverQueue = new LinkedList<>();
         for (int i = 0; i < threadCount; i++) {
-            driverQueue.add(new ChromeDriver(options));
+            ChromeDriver chromeDriver = new ChromeDriver(options);
+            chromeDriver.manage()
+                    .timeouts()
+                    .implicitlyWait(10, TimeUnit.SECONDS)
+                    .pageLoadTimeout(10, TimeUnit.SECONDS)
+                    .setScriptTimeout(10, TimeUnit.SECONDS);
+
+            driverQueue.add(chromeDriver);
         }
 
     }
@@ -95,5 +106,11 @@ public class CrawlManagerService
                 }
             }
         }
+    }
+
+    @PreDestroy
+    private void preDestroy() {
+        logger.info("Quitting all selenium drivers!");
+        driverQueue.forEach(RemoteWebDriver::quit);
     }
 }

@@ -15,11 +15,9 @@ public interface PageRepository extends JpaRepository<Page, Long>
 {
     Optional<Page> findByUrl(String url);
 
-    Optional<Page> findByContentHash(String hash);
+    Optional<Page> findByContentHash(byte[] hash);
 
     boolean existsPageByUrl(String url);
-
-    boolean existsPageByContentHash(String contentHash);
 
     LinkedList<Page> findAllByPageType(PageType pageType);
 

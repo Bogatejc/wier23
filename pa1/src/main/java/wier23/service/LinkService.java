@@ -19,6 +19,10 @@ public class LinkService
 
     private final LinkRepository linkRepository;
 
+    public Link saveLink(Link link) {
+        return linkRepository.saveAndFlush(link);
+    }
+
     public void saveAllLinks(List<Link> linkList) {
         while(true) {
             try {

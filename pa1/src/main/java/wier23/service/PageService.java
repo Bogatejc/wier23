@@ -23,14 +23,16 @@ public class PageService
     private final LinkService linkService;
 
     public Page savePage(Page page) {
-        Page save = pageRepository.save(page);
-        pageRepository.flush();
-        return save;
+        return pageRepository.saveAndFlush(page);
     }
 
     public void saveAllPages(Collection<Page> pageList) {
         pageRepository.saveAll(pageList);
         pageRepository.flush();
+    }
+
+    public Optional<Page> findByContentHash(byte[] contentHash) {
+        return pageRepository.findByContentHash(contentHash);
     }
 
     public void deletePage(Page page) {
@@ -49,10 +51,6 @@ public class PageService
 
     public boolean isUrlDuplicate(String url) {
         return pageRepository.existsPageByUrl(url);
-    }
-
-    public boolean isContentDuplicate(String contentHash) {
-        return pageRepository.existsPageByContentHash(contentHash);
     }
 
     public Queue<Page> getFrontier() {

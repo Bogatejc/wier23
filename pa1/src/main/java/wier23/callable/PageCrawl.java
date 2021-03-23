@@ -1,12 +1,12 @@
 package wier23.callable;
 
-import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 
@@ -74,24 +74,43 @@ public class PageCrawl implements Callable<PageCrawl>
             chromeDriver.get(page.getUrl());
             body = chromeDriver.findElementByTagName("body").getText();
             page.setAccessedTime(LocalDateTime.now());
-            page.setPageType(PageType.HTML);
             page.setSite(site);
-            page.setHtmlContent(body);
 
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             messageDigest.update(body.getBytes());
+            byte[] contentHash = messageDigest.digest();
 
-            page.setContentHash(messageDigest.digest());
+            Optional<Page> originalPage = pageService.findByContentHash(contentHash);
+            if (originalPage.isPresent()) {
+                Page orgPage = originalPage.get();
+                this.page.setPageType(PageType.DUPLICATE);
+                pageService.savePage(this.page);
 
-        } catch (WebDriverException | NoSuchAlgorithmException e) {
+                Link link = new Link();
+                link.setPageFrom(this.page);
+                link.setPageTo(orgPage);
+                linkService.saveLink(link);
+                return this;
+            }
+            else {
+                page.setPageType(PageType.HTML);
+                page.setHtmlContent(body);
+                page.setContentHash(contentHash);
+            }
+
+        } catch (WebDriverException e) {
             logger.warning(e.getMessage());
             logger.warning("Removing page from database.");
 
             pageService.deletePage(page);
 
             return this;
+        } catch (NoSuchAlgorithmException e) {
+            // This should never happen
+            logger.severe(e.getMessage());
         }
-        // TODO CHECK IF DUPLICATE
+
+
 
         extractUrlsByATag();
 
