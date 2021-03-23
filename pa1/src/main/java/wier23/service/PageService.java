@@ -36,6 +36,7 @@ public class PageService
     public void deletePage(Page page) {
         linkService.deleteAllLinksForPage(page);
         pageRepository.delete(page);
+        pageRepository.flush();
     }
 
     public Optional<Page> findByUrl(String url) {

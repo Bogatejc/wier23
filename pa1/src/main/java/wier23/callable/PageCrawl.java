@@ -1,5 +1,8 @@
 package wier23.callable;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -66,9 +69,21 @@ public class PageCrawl implements Callable<PageCrawl>
         }
 
 //        logger.info("Access time: " + LocalDateTime.now());
+        String body;
         try {
             chromeDriver.get(page.getUrl());
-        } catch (WebDriverException e) {
+            body = chromeDriver.findElementByTagName("body").getText();
+            page.setAccessedTime(LocalDateTime.now());
+            page.setPageType(PageType.HTML);
+            page.setSite(site);
+            page.setHtmlContent(body);
+
+            MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+            messageDigest.update(body.getBytes());
+
+            page.setContentHash(messageDigest.digest());
+
+        } catch (WebDriverException | NoSuchAlgorithmException e) {
             logger.warning(e.getMessage());
             logger.warning("Removing page from database.");
 
@@ -76,11 +91,6 @@ public class PageCrawl implements Callable<PageCrawl>
 
             return this;
         }
-
-        page.setAccessedTime(LocalDateTime.now());
-        page.setPageType(PageType.HTML);
-        page.setSite(site);
-
         // TODO CHECK IF DUPLICATE
 
         extractUrlsByATag();

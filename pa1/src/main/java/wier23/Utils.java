@@ -7,6 +7,9 @@ import java.net.URL;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.netpreserve.urlcanon.Canonicalizer;
+import org.netpreserve.urlcanon.ParsedUrl;
+
 import wier23.dtos.RobotsTxt;
 
 public class Utils
@@ -45,7 +48,10 @@ public class Utils
                 newUrl.getPath(),
                 newUrl.getQuery(),
                 newUrl.getRef());
-        return uri.toString();
+
+        ParsedUrl parsedUrl = ParsedUrl.parseUrl(uri.toString());
+        Canonicalizer.WHATWG.canonicalize(parsedUrl);
+        return parsedUrl.toString();
     }
 
     public static RobotsTxt parseRobotsTxt(String robotsContent)

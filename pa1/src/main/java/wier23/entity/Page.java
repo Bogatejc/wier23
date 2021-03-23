@@ -10,6 +10,7 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -43,10 +44,11 @@ public class Page
     private String url;
 
     @Nullable
+    @Column(columnDefinition = "TEXT")
     private String htmlContent;
 
     @Nullable
-    private String contentHash;
+    private byte[] contentHash;
 
     @Nullable
     private Integer httpStatusCode;

@@ -30,7 +30,6 @@ public class Link
 
     @ManyToOne(
             targetEntity =  Page.class,
-            optional = false,
             fetch = FetchType.LAZY
     )
     private Page pageTo;
