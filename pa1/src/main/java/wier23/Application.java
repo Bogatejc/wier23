@@ -42,6 +42,30 @@ public class Application
         } catch (NullPointerException | NumberFormatException e) {
             logger.severe("Invalid parameter for number of threads. Using default value (" + threadCount + ").");
         }
+
+
+        Thread chromeDriverThread = new Thread(() -> {
+            try{
+                Runtime.getRuntime().exec("taskkill /im chromedriver.exe /f");
+                Thread.sleep(10000);
+
+            } catch(Exception e){
+                // do nothing
+            }
+        });
+        Runtime.getRuntime().addShutdownHook(chromeDriverThread);
+
+        Thread chromeThread = new Thread(() -> {
+            try{
+                Runtime.getRuntime().exec("taskkill /im chrome.exe /f");
+                Thread.sleep(10000);
+
+            } catch(Exception e){
+                // do nothing
+            }
+        });
+        Runtime.getRuntime().addShutdownHook(chromeThread);
+
         SpringApplication.run(Application.class, args);
     }
 
