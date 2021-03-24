@@ -4,12 +4,12 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.netpreserve.urlcanon.Canonicalizer;
 import org.netpreserve.urlcanon.ParsedUrl;
-
 import wier23.dtos.RobotsTxt;
 
 public class Utils
@@ -64,9 +64,6 @@ public class Utils
 
     public static RobotsTxt parseRobotsTxt(String robotsContent)
     {
-//        TODO maybe use this
-//        SimpleRobotRulesParser simpleRobotRulesParser = new SimpleRobotRulesParser();
-//        simpleRobotRulesParser.parseContent();
 
         if(robotsContent.isEmpty() || robotsContent == null)
         {
@@ -85,12 +82,18 @@ public class Utils
             // check for disallowed pages
             if(line.matches("^([Dd]isallow:) (\\/.*)$"))
             {
-                robotsTxt.getDisallowedPages().add(line.split("^[^:]*:\\s*")[1]);
+                if(line.contains("Sitemap:"))
+                {
+                    String[] parts = line.split("Sitemap:");
+                    robotsTxt.getDisallowedPages().add(parts[0].split("^[^:]*:\\s*")[1]);
+                    robotsTxt.getSitemaps().add(parts[1].split("^[^:]*:\\s*")[1]);
+                } else {
+                    robotsTxt.getDisallowedPages().add(line.split("^[^:]*:\\s*")[1]);
+                }
             }
             // check for sitemap
             if(line.matches("^([Ss]itemap:) (.*)$"))
             {
-                // TODO poprav tole, k ne dela če sta v isti vrstici in Disallow in Sitemap :(
                 robotsTxt.getSitemaps().add(line.split("^[^:]*:\\s*")[1]);
             }
             // check for crawl-delay pages

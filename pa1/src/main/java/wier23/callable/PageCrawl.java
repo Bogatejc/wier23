@@ -62,13 +62,12 @@ public class PageCrawl implements Callable<PageCrawl>
         logger.info("Visiting: " + page.getUrl());
 
         Site site = getOrCreateSite(domain);
+        RobotsTxt robotsTxt;
         if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
         {
-            RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
-            // TODO check if link is allowed etc.
+            robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
+            logger.info(robotsTxt.toString());
         }
-
-//        logger.info("Access time: " + LocalDateTime.now());
         String body;
         try {
             chromeDriver.get(page.getUrl());
