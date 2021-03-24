@@ -1,13 +1,20 @@
 package wier23.repository;
 
-import java.util.List;
-
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import wier23.entity.Link;
-import wier23.entity.Page;
 
+@Repository
 public interface LinkRepository extends JpaRepository<Link, Long>
 {
-    List<Link> findAllByPageFromOrPageTo(Page pageFrom, Page pageTo);
+    @Modifying
+    @Query("DELETE FROM Link link "
+           + "WHERE link.pageFrom.id = :pageId OR "
+           + "link.pageTo =: pageId "
+    )
+    void deleteLinkByPageId(@Param("pageId") Long pageId);
 }

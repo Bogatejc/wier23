@@ -17,7 +17,7 @@ import lombok.Setter;
 public class Site
 {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     private String domain;
@@ -39,7 +39,7 @@ public class Site
 
     @OneToOne(
             targetEntity = RobotRules.class,
-            fetch = FetchType.EAGER,
+            fetch = FetchType.LAZY,
             orphanRemoval = true
     )
     private RobotRules robotRules;

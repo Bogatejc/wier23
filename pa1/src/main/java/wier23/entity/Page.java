@@ -1,21 +1,23 @@
 package wier23.entity;
 
+import java.io.Serial;
+import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
-import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-
-import org.checkerframework.common.aliasing.qual.Unique;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -34,10 +36,12 @@ import wier23.enums.PageType;
                 @Index(columnList = "contentHash"),
                 @Index(columnList = "url")
         })
-public class Page
+public class Page implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
     private PageType pageType;
@@ -50,7 +54,6 @@ public class Page
     private String htmlContent;
 
     @Nullable
-    @Column(unique = true)
     private byte[] contentHash;
 
     @Nullable
@@ -63,30 +66,14 @@ public class Page
     private Site site;
 
     @OneToMany(
-            targetEntity = Link.class,
-            mappedBy = "pageFrom",
-            fetch = FetchType.LAZY
-    )
-    private Set<Link> fromLinks;
-
-    @OneToMany(
-            targetEntity = Link.class,
-            mappedBy = "pageTo",
-            fetch = FetchType.LAZY
-    )
-    private Set<Link> toLinks;
-
-    @OneToMany(
             targetEntity = Image.class,
-            mappedBy = "page",
-            fetch = FetchType.LAZY
+            mappedBy = "page"
     )
     private Set<Image> images;
 
     @OneToMany(
             targetEntity = PageData.class,
-            mappedBy = "page",
-            fetch = FetchType.LAZY
+            mappedBy = "page"
     )
     private Set<PageData> pageData;
 

@@ -6,6 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -31,15 +32,12 @@ public class FrontierService
 
     private final HashMap<String, LocalDateTime> domainsHashMap = new HashMap<>();
 
-    private final PageService pageService;
-
     private final SiteService siteService;
 
     private final LinkService linkService;
 
     public FrontierService(PageService pageService, SiteService siteService, LinkService linkService)
     {
-        this.pageService = pageService;
         this.siteService = siteService;
         this.linkService = linkService;
 
@@ -55,7 +53,7 @@ public class FrontierService
             Page page = new Page();
             page.setUrl("base");
             page.setPageType(PageType.HTML);
-            pageService.savePage(page);
+            page = pageService.savePage(page);
 
             getBasePages(page);
             logger.log(Level.WARNING, "Base pages successfully loaded!");
@@ -134,9 +132,6 @@ public class FrontierService
 
         try(BufferedReader bufferedReader = new BufferedReader(new FileReader(baseUrls)))
         {
-            List<Page> pagesList = new LinkedList<>();
-            List<Link> linksList = new LinkedList<>();
-
             while(bufferedReader.ready()) {
                 String url = bufferedReader.readLine();
                 try
@@ -144,23 +139,20 @@ public class FrontierService
                     Page newPage = new Page();
                     newPage.setUrl(url);
                     newPage.setPageType(PageType.FRONTIER);
-                    pagesList.add(newPage);
-                    addToFrontier(newPage);
 
                     Link link = new Link();
                     link.setPageFrom(basePage);
                     link.setPageTo(newPage);
-                    linksList.add(link);
+
+                    linkService.saveLink(link);
+
+                    addToFrontier(newPage);
                 }
                 catch (Exception e)
                 {
-                    logger.warning(url + " " + e.getMessage());
+                    logger.severe(url + " " + e.getMessage());
                 }
             }
-
-            pageService.saveAllPages(pagesList);
-            linkService.saveAllLinks(linksList);
-
         }
         catch (IOException e)
         {

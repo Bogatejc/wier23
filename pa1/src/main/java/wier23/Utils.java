@@ -54,7 +54,7 @@ public class Utils
                 newUrl.getQuery(),
                 newUrl.getRef());
 
-        ParsedUrl parsedUrl = ParsedUrl.parseUrl(uri.toString());
+        ParsedUrl parsedUrl = ParsedUrl.parseUrl(uri.normalize().toString());
         Canonicalizer.WHATWG.canonicalize(parsedUrl);
 
         String result = parsedUrl.toString();

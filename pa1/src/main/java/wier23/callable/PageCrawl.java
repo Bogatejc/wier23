@@ -35,7 +35,7 @@ public class PageCrawl implements Callable<PageCrawl>
 
     private final ChromeDriver chromeDriver;
 
-    private final Page page;
+    private Page page;
     private final HashMap<String, Page> newPagesHashMap;
     private final List<Link> linksList;
 
@@ -65,7 +65,7 @@ public class PageCrawl implements Callable<PageCrawl>
         if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
         {
             robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
-            logger.info(robotsTxt.toString());
+//            logger.info(robotsTxt.toString());
         }
         String body;
         try {
@@ -80,14 +80,15 @@ public class PageCrawl implements Callable<PageCrawl>
 
             Optional<Page> originalPage = pageService.findByContentHash(contentHash);
             if (originalPage.isPresent()) {
-                Page orgPage = originalPage.get();
-                page.setPageType(PageType.DUPLICATE);
-                pageService.savePage(page);
+                Page pageTo = originalPage.get();
 
                 Link link = new Link();
                 link.setPageFrom(page);
-                link.setPageTo(orgPage);
+                link.setPageTo(pageTo);
+
+                page.setPageType(PageType.DUPLICATE);
                 linkService.saveLink(link);
+
                 return this;
             }
             else {
@@ -100,6 +101,7 @@ public class PageCrawl implements Callable<PageCrawl>
             logger.warning(e.getMessage());
             logger.warning("Removing page from database.");
 
+            linkService.deleteLinkByPageId(page.getId());
             pageService.deletePage(page);
 
             return this;
@@ -116,11 +118,13 @@ public class PageCrawl implements Callable<PageCrawl>
 //
 //        extractUrlsByImgTags();
 
-        pageService.savePage(page);
-
-        pageService.saveAllPages(newPagesHashMap.values());
-
-        linkService.saveAllLinks(linksList);
+        try {
+            pageService.savePage(page);
+            linkService.saveAllLinks(linksList);
+        }
+        catch (Exception e) {
+            logger.severe(e.getMessage());
+        }
 
         return this;
     }
@@ -233,32 +237,38 @@ public class PageCrawl implements Callable<PageCrawl>
         if (newPagesHashMap.containsKey(canonicalUrl)) {
             Link link = new Link();
             link.setPageFrom(page);
-            link.setPageTo(newPagesHashMap.get(canonicalUrl));
+
+            Page pageTo = newPagesHashMap.get(canonicalUrl);
+            link.setPageTo(pageTo);
+
             linksList.add(link);
+
             return;
         }
 
         pageService.findByUrl(canonicalUrl)
                 .ifPresentOrElse(
-                        existingPage -> {
+                        pageTo -> {
                             Link link = new Link();
                             link.setPageFrom(page);
-                            link.setPageTo(existingPage);
+
+                            link.setPageTo(pageTo);
+
                             linksList.add(link);
                         },
                         () -> {
-                            Page newPage = new Page();
-                            newPage.setUrl(canonicalUrl);
-                            newPage.setPageType(PageType.FRONTIER);
+                            Page pageTo = new Page();
+                            pageTo.setUrl(canonicalUrl);
+                            pageTo.setPageType(PageType.FRONTIER);
 
                             Link link = new Link();
                             link.setPageFrom(page);
-                            link.setPageTo(newPage);
+                            link.setPageTo(pageTo);
 
                             linksList.add(link);
-                            newPagesHashMap.put(canonicalUrl, newPage);
 
-                            frontierService.addToFrontier(newPage);
+                            newPagesHashMap.put(canonicalUrl, pageTo);
+                            frontierService.addToFrontier(pageTo);
                         }
                 );
     }
