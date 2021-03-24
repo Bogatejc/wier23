@@ -15,6 +15,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
+import org.checkerframework.common.aliasing.qual.Unique;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -48,6 +50,7 @@ public class Page
     private String htmlContent;
 
     @Nullable
+    @Column(unique = true)
     private byte[] contentHash;
 
     @Nullable

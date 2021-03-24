@@ -31,7 +31,12 @@ public class Utils
             logger.log(Level.SEVERE, e.getMessage());
             return url;
         }
+
         String domain = uri.getHost();
+        if (domain == null) {
+            logger.log(Level.SEVERE, "Can't parse domain from %s", url);
+            return url;
+        }
         return domain.startsWith("www.") ? domain.substring(4) : domain;
     }
 
@@ -51,7 +56,10 @@ public class Utils
 
         ParsedUrl parsedUrl = ParsedUrl.parseUrl(uri.toString());
         Canonicalizer.WHATWG.canonicalize(parsedUrl);
-        return parsedUrl.toString();
+
+        String result = parsedUrl.toString();
+
+        return result.length() >= 3000 ? result.substring(0, 2999) : result;
     }
 
     public static RobotsTxt parseRobotsTxt(String robotsContent)

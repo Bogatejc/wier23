@@ -83,11 +83,11 @@ public class PageCrawl implements Callable<PageCrawl>
             Optional<Page> originalPage = pageService.findByContentHash(contentHash);
             if (originalPage.isPresent()) {
                 Page orgPage = originalPage.get();
-                this.page.setPageType(PageType.DUPLICATE);
-                pageService.savePage(this.page);
+                page.setPageType(PageType.DUPLICATE);
+                pageService.savePage(page);
 
                 Link link = new Link();
-                link.setPageFrom(this.page);
+                link.setPageFrom(page);
                 link.setPageTo(orgPage);
                 linkService.saveLink(link);
                 return this;
@@ -250,7 +250,7 @@ public class PageCrawl implements Callable<PageCrawl>
                         },
                         () -> {
                             Page newPage = new Page();
-                            newPage.setUrl(url);
+                            newPage.setUrl(canonicalUrl);
                             newPage.setPageType(PageType.FRONTIER);
 
                             Link link = new Link();

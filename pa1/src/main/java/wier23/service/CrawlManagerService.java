@@ -57,9 +57,9 @@ public class CrawlManagerService
             ChromeDriver chromeDriver = new ChromeDriver(options);
             chromeDriver.manage()
                     .timeouts()
-                    .implicitlyWait(10, TimeUnit.SECONDS)
-                    .pageLoadTimeout(10, TimeUnit.SECONDS)
-                    .setScriptTimeout(10, TimeUnit.SECONDS);
+                    .implicitlyWait(30, TimeUnit.SECONDS)
+                    .pageLoadTimeout(30, TimeUnit.SECONDS)
+                    .setScriptTimeout(30, TimeUnit.SECONDS);
 
             driverQueue.add(chromeDriver);
         }

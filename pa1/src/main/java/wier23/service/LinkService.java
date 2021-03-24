@@ -5,6 +5,8 @@ import java.util.logging.Logger;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.AllArgsConstructor;
 import wier23.entity.Link;
@@ -13,6 +15,7 @@ import wier23.repository.LinkRepository;
 
 @Service
 @AllArgsConstructor
+@Transactional(isolation = Isolation.SERIALIZABLE)
 public class LinkService
 {
     private final Logger logger = Logger.getLogger(LinkService.class.getName());
@@ -24,28 +27,22 @@ public class LinkService
     }
 
     public void saveAllLinks(List<Link> linkList) {
-        while(true) {
-            try {
-                linkRepository.saveAll(linkList);
-                linkRepository.flush();
-                break;
-            } catch (DataIntegrityViolationException e) {
-                logger.severe(e.getMessage());
-            }
+        try {
+            linkRepository.saveAll(linkList);
+            linkRepository.flush();
+        } catch (DataIntegrityViolationException e)
+        {
+            logger.severe(e.getMessage());
         }
     }
 
     public void deleteAllLinks(List<Link> linkList) {
-        while(true) {
-            try {
-                linkRepository.deleteAll(linkList);
-                linkRepository.flush();
-                break;
-            } catch (DataIntegrityViolationException e) {
-                logger.severe(e.getMessage());
-            }
+        try {
+            linkRepository.deleteAll(linkList);
+            linkRepository.flush();
+        } catch (DataIntegrityViolationException e) {
+            logger.severe(e.getMessage());
         }
-
     }
 
     public List<Link> getAllLinksForPage(Page page) {
