@@ -1,19 +1,8 @@
 package wier23.callable;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.logging.Logger;
-
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-
 import wier23.Utils;
 import wier23.dtos.RobotsTxt;
 import wier23.entity.Link;
@@ -24,6 +13,16 @@ import wier23.service.FrontierService;
 import wier23.service.LinkService;
 import wier23.service.PageService;
 import wier23.service.SiteService;
+
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Callable;
+import java.util.logging.Logger;
 
 public class PageCrawl implements Callable<PageCrawl>
 {

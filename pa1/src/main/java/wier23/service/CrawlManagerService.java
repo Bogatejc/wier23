@@ -1,24 +1,17 @@
 package wier23.service;
 
-import java.util.LinkedList;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.logging.Logger;
-
-import javax.annotation.PreDestroy;
-
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.stereotype.Service;
-
 import wier23.callable.PageCrawl;
 import wier23.entity.Page;
+
+import javax.annotation.PreDestroy;
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.concurrent.*;
+import java.util.logging.Logger;
 
 @Service
 public class CrawlManagerService
@@ -48,6 +41,7 @@ public class CrawlManagerService
 
         ChromeOptions options = new ChromeOptions();
         options.addArguments("--headless");
+        options.addArguments("user-agent=fri-wier-wier23");
 
         executorService = Executors.newFixedThreadPool(threadCount);
         futureList = new ConcurrentLinkedQueue<>();
