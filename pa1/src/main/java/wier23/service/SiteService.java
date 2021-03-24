@@ -12,7 +12,7 @@ import wier23.repository.SiteRepository;
 
 @Service
 @AllArgsConstructor
-@Transactional(isolation = Isolation.SERIALIZABLE)
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class SiteService
 {
     private final SiteRepository siteRepository;

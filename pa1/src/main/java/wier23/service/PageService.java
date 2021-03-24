@@ -16,7 +16,7 @@ import wier23.repository.PageRepository;
 
 @Service
 @AllArgsConstructor
-@Transactional(isolation = Isolation.SERIALIZABLE)
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class PageService
 {
 

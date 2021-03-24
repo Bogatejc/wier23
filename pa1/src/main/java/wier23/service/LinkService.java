@@ -15,7 +15,7 @@ import wier23.repository.LinkRepository;
 
 @Service
 @AllArgsConstructor
-@Transactional(isolation = Isolation.SERIALIZABLE)
+@Transactional(isolation = Isolation.READ_COMMITTED)
 public class LinkService
 {
     private final Logger logger = Logger.getLogger(LinkService.class.getName());
