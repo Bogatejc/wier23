@@ -1,5 +1,6 @@
 package wier23.service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -22,7 +23,7 @@ public class PageService
         return pageRepository.save(page);
     }
 
-    public Optional<Page> findByContentHash(ContentHash contentHash) {
+    public List<Page> findByContentHash(ContentHash contentHash) {
         return pageRepository.findByContentHash(contentHash);
     }
 

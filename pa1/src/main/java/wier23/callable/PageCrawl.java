@@ -93,12 +93,13 @@ public class PageCrawl implements Callable<PageCrawl>
             contentHash.setHash(messageDigest.digest());
 
             // Check for duplicates by content hash
-            pageService.findByContentHash(contentHash).ifPresentOrElse(originalPage -> {
-
+            List<Page> originalPages = pageService.findByContentHash(contentHash);
+            if (!originalPages.isEmpty())
+            {
                 // If duplicate, save as duplicate and create link
                 Link link = new Link();
                 link.setPageFrom(page);
-                link.setPageTo(originalPage);
+                link.setPageTo(originalPages.get(0));
 
                 page.setPageType(PageType.DUPLICATE);
                 page.setContentHash(null);
@@ -106,9 +107,8 @@ public class PageCrawl implements Callable<PageCrawl>
 
                 pageService.savePage(page);
                 linkService.saveLink(link);
-
-            }, () -> {
-
+            }
+            else {
                 // If not duplicate, crawl for links and save
                 extractUrlsByATag();
                 extractImages(logEntries);
@@ -119,7 +119,7 @@ public class PageCrawl implements Callable<PageCrawl>
                 page.setContentHash(contentHash);
 
                 pageService.savePage(page);
-            });
+            }
 
         } catch (URISyntaxException e) {
             // This can happen when parsing domain name

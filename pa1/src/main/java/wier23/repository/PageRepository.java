@@ -1,6 +1,7 @@
 package wier23.repository;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,7 +16,7 @@ public interface PageRepository extends JpaRepository<Page, Long>
 {
     Optional<Page> findByUrl(String url);
 
-    Optional<Page> findByContentHash(ContentHash contentHash);
+    List<Page> findByContentHash(ContentHash contentHash);
 
     boolean existsPageByUrl(String url);
 
