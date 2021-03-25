@@ -1,19 +1,5 @@
 package wier23.callable;
 
-import org.openqa.selenium.WebDriverException;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import wier23.Utils;
-import wier23.dtos.RobotsTxt;
-import wier23.entity.Link;
-import wier23.entity.Page;
-import wier23.entity.Site;
-import wier23.enums.PageType;
-import wier23.service.FrontierService;
-import wier23.service.LinkService;
-import wier23.service.PageService;
-import wier23.service.SiteService;
-
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
@@ -23,6 +9,23 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
+
+import org.openqa.selenium.WebDriverException;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.springframework.dao.DataIntegrityViolationException;
+
+import wier23.Utils;
+import wier23.dtos.RobotsTxt;
+import wier23.entity.ContentHash;
+import wier23.entity.Link;
+import wier23.entity.Page;
+import wier23.entity.PageType;
+import wier23.entity.Site;
+import wier23.service.FrontierService;
+import wier23.service.LinkService;
+import wier23.service.PageService;
+import wier23.service.SiteService;
 
 public class PageCrawl implements Callable<PageCrawl>
 {
@@ -35,7 +38,7 @@ public class PageCrawl implements Callable<PageCrawl>
 
     private final ChromeDriver chromeDriver;
 
-    private Page page;
+    private final Page page;
     private final HashMap<String, Page> newPagesHashMap;
     private final List<Link> linksList;
 
@@ -69,26 +72,21 @@ public class PageCrawl implements Callable<PageCrawl>
         }
         String body;
         try {
-            chromeDriver.get(page.getUrl());
-            body = chromeDriver.findElementByTagName("body").getText();
             page.setAccessedTime(LocalDateTime.now());
             page.setSite(site);
 
+            chromeDriver.get(page.getUrl());
+            body = chromeDriver.findElementByTagName("body").getText();
+
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             messageDigest.update(body.getBytes());
-            byte[] contentHash = messageDigest.digest();
+
+            ContentHash contentHash = new ContentHash();
+            contentHash.setHash(messageDigest.digest());
 
             Optional<Page> originalPage = pageService.findByContentHash(contentHash);
             if (originalPage.isPresent()) {
-                Page pageTo = originalPage.get();
-
-                Link link = new Link();
-                link.setPageFrom(page);
-                link.setPageTo(pageTo);
-
-                page.setPageType(PageType.DUPLICATE);
-                linkService.saveLink(link);
-
+                saveDuplicatePage(originalPage.get());
                 return this;
             }
             else {
@@ -122,11 +120,31 @@ public class PageCrawl implements Callable<PageCrawl>
             pageService.savePage(page);
             linkService.saveAllLinks(linksList);
         }
-        catch (Exception e) {
-            logger.severe(e.getMessage());
+        catch (DataIntegrityViolationException e) {
+            logger.warning("Duplicate content hash exception! Saving as duplicate instead.");
+            pageService.findByContentHash(page.getContentHash())
+                    .ifPresentOrElse(
+                            this::saveDuplicatePage,
+                            () -> {
+                                throw new DataIntegrityViolationException("This content has does not yet exist!");
+                    });
+            return this;
         }
 
         return this;
+    }
+
+    private void saveDuplicatePage(Page originalPage)
+    {
+        Link link = new Link();
+        link.setPageFrom(page);
+        link.setPageTo(originalPage);
+
+        page.setPageType(PageType.DUPLICATE);
+        page.setContentHash(null);
+        page.setHtmlContent(null);
+
+        linkService.saveLink(link);
     }
 
     private Site getOrCreateSite(String domain)

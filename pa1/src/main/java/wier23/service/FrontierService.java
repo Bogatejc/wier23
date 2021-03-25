@@ -6,10 +6,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -20,8 +17,8 @@ import org.springframework.util.ResourceUtils;
 import wier23.Utils;
 import wier23.entity.Link;
 import wier23.entity.Page;
+import wier23.entity.PageType;
 import wier23.entity.Site;
-import wier23.enums.PageType;
 
 @Service
 public class FrontierService
@@ -36,10 +33,13 @@ public class FrontierService
 
     private final LinkService linkService;
 
+    private final PageService pageService;
+
     public FrontierService(PageService pageService, SiteService siteService, LinkService linkService)
     {
         this.siteService = siteService;
         this.linkService = linkService;
+        this.pageService = pageService;
 
         // Fetch frontier from database
         logger.log(Level.INFO, "Fetching frontier from database.");
@@ -150,6 +150,7 @@ public class FrontierService
                 }
                 catch (Exception e)
                 {
+                    e.printStackTrace();
                     logger.severe(url + " " + e.getMessage());
                 }
             }

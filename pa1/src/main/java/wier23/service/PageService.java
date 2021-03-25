@@ -6,8 +6,9 @@ import java.util.Queue;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
+import wier23.entity.ContentHash;
 import wier23.entity.Page;
-import wier23.enums.PageType;
+import wier23.entity.PageType;
 import wier23.repository.PageRepository;
 
 @Service
@@ -23,8 +24,7 @@ public class PageService
         return pageRepository.save(page);
     }
 
-    public Optional<Page> findByContentHash(byte[] contentHash) {
-        // TODO query did not return a unique result: 2
+    public Optional<Page> findByContentHash(ContentHash contentHash) {
         return pageRepository.findByContentHash(contentHash);
     }
 

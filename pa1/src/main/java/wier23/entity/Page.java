@@ -1,29 +1,26 @@
 package wier23.entity;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import wier23.enums.PageType;
 
 @Entity
 @Getter
@@ -31,9 +28,9 @@ import wier23.enums.PageType;
 @NoArgsConstructor
 @EqualsAndHashCode
 @Table(
-        name="page",
+        schema = "crawldb",
+        name = "page",
         indexes = {
-                @Index(columnList = "contentHash"),
                 @Index(columnList = "url")
         })
 public class Page implements Serializable
@@ -44,17 +41,11 @@ public class Page implements Serializable
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    private PageType pageType;
-
     @Column(length = 3000)
     private String url;
 
-    @Nullable
     @Column(columnDefinition = "TEXT")
     private String htmlContent;
-
-    @Nullable
-    private byte[] contentHash;
 
     @Nullable
     private Integer httpStatusCode;
@@ -62,8 +53,15 @@ public class Page implements Serializable
     @Nullable
     private LocalDateTime accessedTime;
 
-    @ManyToOne(targetEntity =  Site.class)
+    @ManyToOne(
+            targetEntity =  Site.class
+    )
     private Site site;
+
+    @ManyToOne(
+            targetEntity = PageType.class
+    )
+    private PageType pageType;
 
     @OneToMany(
             targetEntity = Image.class,
@@ -76,5 +74,11 @@ public class Page implements Serializable
             mappedBy = "page"
     )
     private Set<PageData> pageData;
+
+
+    @OneToOne(
+            cascade = CascadeType.ALL
+    )
+    private ContentHash contentHash;
 
 }

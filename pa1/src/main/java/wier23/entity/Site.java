@@ -14,6 +14,9 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @EqualsAndHashCode
+@Table(
+        schema = "crawldb"
+)
 public class Site
 {
     @Id
@@ -32,15 +35,13 @@ public class Site
 
     @OneToMany(
             targetEntity = Page.class,
-            mappedBy = "site",
-            fetch = FetchType.LAZY
+            mappedBy = "site"
     )
     private Set<Page> pages;
 
     @OneToOne(
             targetEntity = RobotRules.class,
-            fetch = FetchType.LAZY,
-            orphanRemoval = true
+            mappedBy = "site"
     )
     private RobotRules robotRules;
 

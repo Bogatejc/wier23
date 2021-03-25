@@ -4,3 +4,6 @@
 
 ## Database model
 ![Database model](src/main/resources/database.png)
+
+## How to
+- Create crawldb schema

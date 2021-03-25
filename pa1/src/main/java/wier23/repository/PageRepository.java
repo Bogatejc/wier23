@@ -6,15 +6,16 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import wier23.entity.ContentHash;
 import wier23.entity.Page;
-import wier23.enums.PageType;
+import wier23.entity.PageType;
 
 @Repository
 public interface PageRepository extends JpaRepository<Page, Long>
 {
     Optional<Page> findByUrl(String url);
 
-    Optional<Page> findByContentHash(byte[] hash);
+    Optional<Page> findByContentHash(ContentHash contentHash);
 
     boolean existsPageByUrl(String url);
 
