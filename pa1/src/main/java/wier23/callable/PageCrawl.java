@@ -75,7 +75,7 @@ public class PageCrawl implements Callable<PageCrawl>
             page.setAccessedTime(LocalDateTime.now());
             page.setSite(site);
 
-            chromeDriver.get(page.getUrl());
+            frontierService.makeRequest(page.getUrl(), page.getSite(), chromeDriver);
 
             Integer statusCode = Utils.getStatusCode(chromeDriver, page, frontierService);
             logger.info(page.getUrl() + " " + statusCode);
@@ -157,13 +157,20 @@ public class PageCrawl implements Callable<PageCrawl>
         return siteService.findByDomain(domain)
                 .orElseGet(() -> {
                     Site newSite = new Site();
+                    newSite.setDomain(domain);
+
                     try
                     {
-                        chromeDriver.get("http://" + domain + "/robots.txt");
-
+                        frontierService.makeRequest("http://" + domain + "/robots.txt", newSite, chromeDriver);
                         if (!chromeDriver.getTitle().contains("404") && !chromeDriver.findElementByTagName("body").getText().contains("404"))
                         {
                             newSite.setRobotsContent(chromeDriver.findElementByTagName("body").getText());
+                            Optional.ofNullable(Utils.parseRobotsTxt(newSite.getRobotsContent()))
+                                    .ifPresent(robotsTxt -> {
+                                        if (robotsTxt.getCrawlDelay() > 0) {
+                                            newSite.setDomainDelay(robotsTxt.getCrawlDelay());
+                                        }
+                                    });
                         }
 
                     }

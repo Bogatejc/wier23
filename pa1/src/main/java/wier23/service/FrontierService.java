@@ -6,11 +6,14 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.mockito.cglib.core.Local;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
 
@@ -83,20 +86,18 @@ public class FrontierService
             String domain = Utils.getDomainFromUrl(polledPage.getUrl());
             if (!domainsHashMap.containsKey(domain))
             {
-                domainsHashMap.put(domain, LocalDateTime.now());
                 return polledPage;
             }
             else
             {
-                Integer domainDelay = siteService.findByDomain(domain)
+                Float domainDelay = siteService.findByDomain(domain)
                         .map(Site::getDomainDelay)
-                        .orElse(5);
+                        .orElse(5f);
 
                 // TODO check robots.txt for any other possible restrictions
                 LocalDateTime lastAccessTime = domainsHashMap.get(domain);
-                if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(domainDelay)))
+                if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(Math.round(domainDelay))))
                 {
-                    updateDomainTime(domain);
                     return polledPage;
                 }
                 else
@@ -159,6 +160,29 @@ public class FrontierService
         {
             logger.severe(e.getMessage());
         }
+    }
+
+    public void makeRequest(String url, Site site, ChromeDriver chromeDriver) {
+        try
+        {
+            long domainLeftDelayInMillis = getDomainLeftDelayInMillis(site);
+            logger.info(String.format("Waiting %d ms then accessing: %s", domainLeftDelayInMillis, url));
+            Thread.sleep(domainLeftDelayInMillis);
+            updateDomainTime(site.getDomain());
+            chromeDriver.get(url);
+        }
+        catch (InterruptedException e)
+        {
+            logger.severe(e.getMessage());
+        }
+    }
+
+    public long getDomainLeftDelayInMillis(Site site) {
+        if (!domainsHashMap.containsKey(site.getDomain())) {
+            return 0;
+        }
+        long tmp = Math.round(site.getDomainDelay() * 1000) - ChronoUnit.MILLIS.between(domainsHashMap.get(site.getDomain()), LocalDateTime.now());
+        return tmp > 0 ? tmp : 0;
     }
 
     public void updateDomainTime(String domain) {

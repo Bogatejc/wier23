@@ -5,9 +5,6 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
-import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -76,7 +73,7 @@ public class Utils
     public static RobotsTxt parseRobotsTxt(String robotsContent)
     {
 
-        if(robotsContent.isEmpty() || robotsContent == null)
+        if(robotsContent.isEmpty())
         {
             return null;
         }
@@ -130,12 +127,7 @@ public class Utils
                 .orElseGet(() -> {
                     try
                     {
-                        int delayInMillis = Optional.ofNullable(page.getSite().getDomainDelay()).orElse(5) * 1000;
-                        long diff = ChronoUnit.MILLIS.between(page.getAccessedTime(), LocalDateTime.now());
-                        long delay = delayInMillis - diff;
-                        if (delay > 0) {
-                            Thread.sleep(delay);
-                        }
+                        Thread.sleep(Math.round(frontierService.getDomainLeftDelayInMillis(page.getSite())));
                         frontierService.updateDomainTime(page.getSite().getDomain());
                         return Jsoup.connect(page.getUrl()).execute().statusCode();
                     }
@@ -146,5 +138,4 @@ public class Utils
                     return 400;
                 });
     }
-
 }

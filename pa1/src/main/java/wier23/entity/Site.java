@@ -31,7 +31,7 @@ public class Site
     @Column(columnDefinition = "TEXT")
     private String sitemapContent;
 
-    private Integer domainDelay = 5;
+    private float domainDelay = 5f;
 
     @OneToMany(
             targetEntity = Page.class,
