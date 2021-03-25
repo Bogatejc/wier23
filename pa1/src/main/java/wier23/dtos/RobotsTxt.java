@@ -15,5 +15,5 @@ public class RobotsTxt {
     private List<String> allowedPages = new LinkedList<>();
     private List<String> disallowedPages = new LinkedList<>();
     private List<String> sitemaps = new LinkedList<>();
-    private float crawlDelay;
+    private float crawlDelay = 5;
 }

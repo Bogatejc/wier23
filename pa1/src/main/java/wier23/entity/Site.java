@@ -39,10 +39,4 @@ public class Site
     )
     private Set<Page> pages;
 
-    @OneToOne(
-            targetEntity = RobotRules.class,
-            mappedBy = "site"
-    )
-    private RobotRules robotRules;
-
 }
