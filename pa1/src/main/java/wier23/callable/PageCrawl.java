@@ -61,9 +61,9 @@ public class PageCrawl implements Callable<PageCrawl>
          */
 
         String domain = Utils.getDomainFromUrl(page.getUrl());
-        logger.info("Visiting: " + page.getUrl());
 
         Site site = getOrCreateSite(domain);
+
         RobotsTxt robotsTxt;
         if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
         {
@@ -76,6 +76,11 @@ public class PageCrawl implements Callable<PageCrawl>
             page.setSite(site);
 
             chromeDriver.get(page.getUrl());
+
+            Integer statusCode = Utils.getStatusCode(chromeDriver, page, frontierService);
+            logger.info(page.getUrl() + " " + statusCode);
+            page.setHttpStatusCode(statusCode);
+
             body = chromeDriver.findElementByTagName("body").getText();
 
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");

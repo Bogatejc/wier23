@@ -96,7 +96,7 @@ public class FrontierService
                 LocalDateTime lastAccessTime = domainsHashMap.get(domain);
                 if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(domainDelay)))
                 {
-                    domainsHashMap.put(domain, LocalDateTime.now());
+                    updateDomainTime(domain);
                     return polledPage;
                 }
                 else
@@ -159,5 +159,9 @@ public class FrontierService
         {
             logger.severe(e.getMessage());
         }
+    }
+
+    public void updateDomainTime(String domain) {
+        domainsHashMap.put(domain, LocalDateTime.now());
     }
 }

@@ -2,6 +2,10 @@ package wier23.service;
 
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.springframework.stereotype.Service;
 import wier23.callable.PageCrawl;
@@ -11,6 +15,7 @@ import javax.annotation.PreDestroy;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.concurrent.*;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 @Service
@@ -43,12 +48,18 @@ public class CrawlManagerService
         options.addArguments("--headless");
         options.addArguments("user-agent=fri-wier-wier23");
 
+        LoggingPreferences loggingPreferences = new LoggingPreferences();
+        loggingPreferences.enable(LogType.PERFORMANCE, Level.ALL);
+        options.setCapability("goog:loggingPrefs", loggingPreferences);
+
         executorService = Executors.newFixedThreadPool(threadCount);
         futureList = new ConcurrentLinkedQueue<>();
 
         driverQueue = new LinkedList<>();
         for (int i = 0; i < threadCount; i++) {
             ChromeDriver chromeDriver = new ChromeDriver(options);
+
+            // Timeouts
             chromeDriver.manage()
                     .timeouts()
                     .implicitlyWait(30, TimeUnit.SECONDS)

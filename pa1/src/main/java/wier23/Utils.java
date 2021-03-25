@@ -1,16 +1,27 @@
 package wier23;
 
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
 import org.netpreserve.urlcanon.Canonicalizer;
 import org.netpreserve.urlcanon.ParsedUrl;
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogType;
+
 import wier23.dtos.RobotsTxt;
+import wier23.entity.Page;
+import wier23.service.FrontierService;
 
 public class Utils
 {
@@ -99,11 +110,41 @@ public class Utils
             // check for crawl-delay pages
             if(line.matches("^([Cc]rawl-delay:) (.*)$"))
             {
-                robotsTxt.setCrawlDelay(Integer.parseInt(line.split("^[^:]*:\\s*")[1]));
+                robotsTxt.setCrawlDelay(Float.parseFloat(line.split("^[^:]*:\\s*")[1]));
             }
         }
         return robotsTxt;
     }
 
+    public static Integer getStatusCode(ChromeDriver chromeDriver, Page page, FrontierService frontierService) {
+
+        LogEntries logEntries = chromeDriver.manage().logs().get(LogType.PERFORMANCE);
+        return logEntries.getAll().stream()
+                .map(logEntry -> new JSONObject(logEntry.getMessage()))
+                .map(jsonObject -> jsonObject.getJSONObject("message"))
+                .filter(jsonObject -> jsonObject.getString("method").equals("Network.responseReceived"))
+                .map(jsonObject -> jsonObject.getJSONObject("params").getJSONObject("response"))
+                .filter(jsonObject -> jsonObject.getString("url").equals(page.getUrl()))
+                .map(jsonObject -> jsonObject.getInt("status"))
+                .findAny()
+                .orElseGet(() -> {
+                    try
+                    {
+                        int delayInMillis = Optional.ofNullable(page.getSite().getDomainDelay()).orElse(5) * 1000;
+                        long diff = ChronoUnit.MILLIS.between(page.getAccessedTime(), LocalDateTime.now());
+                        long delay = delayInMillis - diff;
+                        if (delay > 0) {
+                            Thread.sleep(delay);
+                        }
+                        frontierService.updateDomainTime(page.getSite().getDomain());
+                        return Jsoup.connect(page.getUrl()).execute().statusCode();
+                    }
+                    catch (IOException | InterruptedException e)
+                    {
+                        logger.warning(e.getMessage());
+                    }
+                    return 400;
+                });
+    }
 
 }
