@@ -18,8 +18,6 @@ public class PageService
 
     private final PageRepository pageRepository;
 
-    private final LinkService linkService;
-
     public Page savePage(Page page) {
         return pageRepository.save(page);
     }
@@ -34,10 +32,6 @@ public class PageService
 
     public Optional<Page> findByUrl(String url) {
         return pageRepository.findByUrl(url);
-    }
-
-    public boolean isUrlDuplicate(String url) {
-        return pageRepository.existsPageByUrl(url);
     }
 
     public Queue<Page> getFrontier() {

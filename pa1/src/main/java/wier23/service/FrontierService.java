@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -12,7 +13,6 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.mockito.cglib.core.Local;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
@@ -82,28 +82,34 @@ public class FrontierService
         while(!frontier.isEmpty())
         {
             Page polledPage = frontier.poll();
+            try {
+                String domain = Utils.getDomainFromUrl(polledPage.getUrl());
 
-            String domain = Utils.getDomainFromUrl(polledPage.getUrl());
-            if (!domainsHashMap.containsKey(domain))
-            {
-                return polledPage;
-            }
-            else
-            {
-                Float domainDelay = siteService.findByDomain(domain)
-                        .map(Site::getDomainDelay)
-                        .orElse(5f);
-
-                // TODO check robots.txt for any other possible restrictions
-                LocalDateTime lastAccessTime = domainsHashMap.get(domain);
-                if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(Math.round(domainDelay))))
+                if (!domainsHashMap.containsKey(domain))
                 {
                     return polledPage;
                 }
                 else
                 {
-                    frontier.add(polledPage);
+                    Float domainDelay = siteService.findByDomain(domain)
+                            .map(Site::getDomainDelay)
+                            .orElse(5f);
+
+                    // TODO check robots.txt for any other possible restrictions
+                    LocalDateTime lastAccessTime = domainsHashMap.get(domain);
+                    if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(Math.round(domainDelay))))
+                    {
+                        return polledPage;
+                    }
+                    else
+                    {
+                        frontier.add(polledPage);
+                    }
                 }
+            }
+            catch (URISyntaxException e)
+            {
+                logger.warning(e.getMessage());
             }
         }
         return null;
@@ -140,6 +146,8 @@ public class FrontierService
                     Page newPage = new Page();
                     newPage.setUrl(url);
                     newPage.setPageType(PageType.FRONTIER);
+
+                    newPage =  pageService.savePage(newPage);
 
                     Link link = new Link();
                     link.setPageFrom(basePage);

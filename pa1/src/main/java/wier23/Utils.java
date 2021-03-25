@@ -1,49 +1,28 @@
 package wier23;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import org.json.JSONObject;
-import org.jsoup.Jsoup;
 import org.netpreserve.urlcanon.Canonicalizer;
 import org.netpreserve.urlcanon.ParsedUrl;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.logging.LogEntries;
-import org.openqa.selenium.logging.LogType;
 
 import wier23.dtos.RobotsTxt;
-import wier23.entity.Page;
-import wier23.service.FrontierService;
 
 public class Utils
 {
-    private static final Logger logger = Logger.getLogger(Utils.class.getName());
 
     private Utils() {
         // Private constructor to hide public implicit one
     }
 
-    public static String getDomainFromUrl(String url) {
-        URI uri;
-        try
-        {
-            uri = new URI(url);
-        }
-        catch (URISyntaxException e)
-        {
-            logger.log(Level.SEVERE, e.getMessage());
-            return url;
-        }
-
+    public static String getDomainFromUrl(String url) throws URISyntaxException
+    {
+        URI uri = new URI(url);
         String domain = uri.getHost();
         if (domain == null) {
-            logger.log(Level.SEVERE, "Can't parse domain from %s", url);
-            return url;
+            throw new URISyntaxException(url, "Can't parse domain from %s", 0);
         }
         return domain.startsWith("www.") ? domain.substring(4) : domain;
     }
@@ -111,31 +90,5 @@ public class Utils
             }
         }
         return robotsTxt;
-    }
-
-    public static Integer getStatusCode(ChromeDriver chromeDriver, Page page, FrontierService frontierService) {
-
-        LogEntries logEntries = chromeDriver.manage().logs().get(LogType.PERFORMANCE);
-        return logEntries.getAll().stream()
-                .map(logEntry -> new JSONObject(logEntry.getMessage()))
-                .map(jsonObject -> jsonObject.getJSONObject("message"))
-                .filter(jsonObject -> jsonObject.getString("method").equals("Network.responseReceived"))
-                .map(jsonObject -> jsonObject.getJSONObject("params").getJSONObject("response"))
-                .filter(jsonObject -> jsonObject.getString("url").equals(page.getUrl()))
-                .map(jsonObject -> jsonObject.getInt("status"))
-                .findAny()
-                .orElseGet(() -> {
-                    try
-                    {
-                        Thread.sleep(Math.round(frontierService.getDomainLeftDelayInMillis(page.getSite())));
-                        frontierService.updateDomainTime(page.getSite().getDomain());
-                        return Jsoup.connect(page.getUrl()).execute().statusCode();
-                    }
-                    catch (IOException | InterruptedException e)
-                    {
-                        logger.warning(e.getMessage());
-                    }
-                    return 400;
-                });
     }
 }

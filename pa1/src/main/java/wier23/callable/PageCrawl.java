@@ -1,25 +1,33 @@
 package wier23.callable;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
+import org.json.JSONObject;
+import org.jsoup.Jsoup;
 import org.openqa.selenium.WebDriverException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
-import org.springframework.dao.DataIntegrityViolationException;
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogType;
 
 import wier23.Utils;
 import wier23.dtos.RobotsTxt;
 import wier23.entity.ContentHash;
+import wier23.entity.DataType;
+import wier23.entity.Image;
 import wier23.entity.Link;
 import wier23.entity.Page;
+import wier23.entity.PageData;
 import wier23.entity.PageType;
 import wier23.entity.Site;
 import wier23.service.FrontierService;
@@ -40,12 +48,10 @@ public class PageCrawl implements Callable<PageCrawl>
 
     private final Page page;
     private final HashMap<String, Page> newPagesHashMap;
-    private final List<Link> linksList;
 
     public PageCrawl(Page page, ChromeDriver chromeDriver, FrontierService frontierService, PageService pageService, SiteService siteService, LinkService linkService)
     {
         this.newPagesHashMap = new HashMap<>();
-        this.linksList = new LinkedList<>();
         this.frontierService = frontierService;
         this.pageService = pageService;
         this.siteService = siteService;
@@ -56,100 +62,83 @@ public class PageCrawl implements Callable<PageCrawl>
     @Override
     public PageCrawl call()
     {
-        /*
-         * First we check the domain if there are any restrictions for page accessing
-         */
-
-        String domain = Utils.getDomainFromUrl(page.getUrl());
-
-        Site site = getOrCreateSite(domain);
-
-        RobotsTxt robotsTxt;
-        if(site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
+        try
         {
-            robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
-//            logger.info(robotsTxt.toString());
-        }
-        String body;
-        try {
+            // Get site if it already exists, otherwise create new one
+            String domain = Utils.getDomainFromUrl(page.getUrl());
+            Site site = getOrCreateSite(domain);
+
+            if (site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
+            {
+                RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
+            }
+
             page.setAccessedTime(LocalDateTime.now());
             page.setSite(site);
 
             frontierService.makeRequest(page.getUrl(), page.getSite(), chromeDriver);
+            LogEntries logEntries = chromeDriver.manage().logs().get(LogType.PERFORMANCE);
 
-            Integer statusCode = Utils.getStatusCode(chromeDriver, page, frontierService);
+            // Set status code
+            Integer statusCode = getStatusCode(logEntries);
             logger.info(page.getUrl() + " " + statusCode);
             page.setHttpStatusCode(statusCode);
 
-            body = chromeDriver.findElementByTagName("body").getText();
-
+            // Set content hash
+            String body = chromeDriver.findElementByTagName("body").getText();
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             messageDigest.update(body.getBytes());
 
             ContentHash contentHash = new ContentHash();
             contentHash.setHash(messageDigest.digest());
 
-            Optional<Page> originalPage = pageService.findByContentHash(contentHash);
-            if (originalPage.isPresent()) {
-                saveDuplicatePage(originalPage.get());
-                return this;
-            }
-            else {
+            // Check for duplicates by content hash
+            pageService.findByContentHash(contentHash).ifPresentOrElse(originalPage -> {
+
+                // If duplicate, save as duplicate and create link
+                Link link = new Link();
+                link.setPageFrom(page);
+                link.setPageTo(originalPage);
+
+                page.setPageType(PageType.DUPLICATE);
+                page.setContentHash(null);
+                page.setHtmlContent(null);
+
+                pageService.savePage(page);
+                linkService.saveLink(link);
+
+            }, () -> {
+
+                // If not duplicate, crawl for links and save
+                extractUrlsByATag();
+                extractImages(logEntries);
+                extractUrlsByOnClickElements();
+
                 page.setPageType(PageType.HTML);
                 page.setHtmlContent(body);
                 page.setContentHash(contentHash);
-            }
+
+                pageService.savePage(page);
+            });
+
+        } catch (URISyntaxException e) {
+            // This can happen when parsing domain name
+            logger.warning(e.getMessage());
 
         } catch (WebDriverException e) {
+            // Invalid page
             logger.warning(e.getMessage());
             logger.warning("Removing page from database.");
 
             linkService.deleteLinkByPageId(page.getId());
             pageService.deletePage(page);
 
-            return this;
         } catch (NoSuchAlgorithmException e) {
             // This should never happen
             logger.severe(e.getMessage());
         }
 
-
-
-        extractUrlsByATag();
-
-//        extractUrlsByOnClickElements();
-//
-//        extractUrlsByImgTags();
-
-        try {
-            pageService.savePage(page);
-            linkService.saveAllLinks(linksList);
-        }
-        catch (DataIntegrityViolationException e) {
-            logger.warning("Duplicate content hash exception! Saving as duplicate instead.");
-            pageService.findByContentHash(page.getContentHash())
-                    .ifPresentOrElse(
-                            this::saveDuplicatePage,
-                            () -> {
-                                throw new DataIntegrityViolationException("This content has does not yet exist!");
-                    });
-            return this;
-        }
-
         return this;
-    }
-
-    private void saveDuplicatePage(Page originalPage)
-    {
-        Link link = new Link();
-        link.setPageFrom(page);
-        link.setPageTo(originalPage);
-
-        page.setPageType(PageType.DUPLICATE);
-        page.setContentHash(null);
-        page.setHtmlContent(null);
-
-        linkService.saveLink(link);
     }
 
     private Site getOrCreateSite(String domain)
@@ -182,25 +171,27 @@ public class PageCrawl implements Callable<PageCrawl>
                 });
     }
 
-    private void extractUrlsByImgTags()
+    private void extractImages(LogEntries logEntries)
     {
-        List<WebElement> imgTags = chromeDriver.findElementsByTagName("img");
-        for(WebElement imgTag : imgTags)
-        {
-            String imgLink = imgTag.getAttribute("src");
-            try
-            {
-                if(imgLink.startsWith("/"))
-                {
-                    imgLink = page.getUrl() + imgLink;
-                }
-                // TODO add image to page data
-            }
-            catch (Exception e)
-            {
-                // ignore bad urls and base64 encoded images
-            }
-        }
+        List<Image> images = logEntries.getAll().stream()
+                .map(logEntry -> new JSONObject(logEntry.getMessage()))
+                .map(jsonObject -> jsonObject.getJSONObject("message"))
+                .filter(jsonObject -> jsonObject.getString("method").equals("Network.responseReceived"))
+                .map(jsonObject -> jsonObject.getJSONObject("params").getJSONObject("response"))
+                .filter(jsonObject -> jsonObject.getJSONObject("headers").has("Content-Type"))
+                .filter(jsonObject -> jsonObject.getJSONObject("headers").getString("Content-Type").startsWith("image"))
+                .filter(jsonObject -> jsonObject.getString("url").length() < 255)
+                .map(jsonObject -> {
+                    Image image = new Image();
+                    image.setAccessedTime(LocalDateTime.now());
+                    image.setContentType(jsonObject.getJSONObject("headers").getString("Content-Type"));
+                    image.setFilename(jsonObject.getString("url"));
+                    image.setPage(page);
+                    return image;
+                })
+                .collect(Collectors.toList());
+
+        page.setImages(images);
     }
 
     private void extractUrlsByOnClickElements()
@@ -225,19 +216,32 @@ public class PageCrawl implements Callable<PageCrawl>
     private void extractUrlsByATag()
     {
         try {
+
             chromeDriver.findElementsByTagName("a").forEach(tag -> {
                 String url = tag.getAttribute("href");
-                try
+                if (url != null)
                 {
-                    if(url.startsWith("/"))
+                    if (url.startsWith("/"))
                     {
                         url = page.getUrl() + url;
                     }
-                    checkAndAddToList(url);
-                }
-                catch (Exception e)
-                {
-                    // ignore bad urls
+
+                    int beginIndex = url.lastIndexOf(".");
+                    if (beginIndex != -1) {
+                        String dataType = url.substring(beginIndex).toUpperCase();
+                        if (DataType.allDataTypes.contains(dataType))
+                        {
+                            PageData pageData = new PageData();
+                            pageData.setDataType(new DataType(dataType));
+                            pageData.setPage(page);
+                        }
+                        else
+                        {
+                            checkAndAddToList(url);
+                        }
+                    } else {
+                        checkAndAddToList(url);
+                    }
                 }
             });
 
@@ -271,7 +275,7 @@ public class PageCrawl implements Callable<PageCrawl>
             Page pageTo = newPagesHashMap.get(canonicalUrl);
             link.setPageTo(pageTo);
 
-            linksList.add(link);
+            linkService.saveLink(link);
 
             return;
         }
@@ -284,7 +288,7 @@ public class PageCrawl implements Callable<PageCrawl>
 
                             link.setPageTo(pageTo);
 
-                            linksList.add(link);
+                            linkService.saveLink(link);
                         },
                         () -> {
                             Page pageTo = new Page();
@@ -295,12 +299,40 @@ public class PageCrawl implements Callable<PageCrawl>
                             link.setPageFrom(page);
                             link.setPageTo(pageTo);
 
-                            linksList.add(link);
 
                             newPagesHashMap.put(canonicalUrl, pageTo);
+
+                            pageTo = pageService.savePage(pageTo);
+                            linkService.saveLink(link);
+
                             frontierService.addToFrontier(pageTo);
                         }
                 );
+    }
+
+    public int getStatusCode(LogEntries logEntries) {
+
+        return logEntries.getAll().stream()
+                .map(logEntry -> new JSONObject(logEntry.getMessage()))
+                .map(jsonObject -> jsonObject.getJSONObject("message"))
+                .filter(jsonObject -> jsonObject.getString("method").equals("Network.responseReceived"))
+                .map(jsonObject -> jsonObject.getJSONObject("params").getJSONObject("response"))
+                .filter(jsonObject -> jsonObject.getString("url").equals(page.getUrl()))
+                .map(jsonObject -> jsonObject.getInt("status"))
+                .findAny()
+                .orElseGet(() -> {
+                    try
+                    {
+                        Thread.sleep(frontierService.getDomainLeftDelayInMillis(page.getSite()));
+                        frontierService.updateDomainTime(page.getSite().getDomain());
+                        return Jsoup.connect(page.getUrl()).execute().statusCode();
+                    }
+                    catch (IOException | InterruptedException e)
+                    {
+                        logger.warning(e.getMessage());
+                    }
+                    return 400;
+                });
     }
 
     /**

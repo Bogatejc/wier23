@@ -30,15 +30,13 @@ public class Link
 
     @ManyToOne(
             targetEntity =  Page.class,
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
+            fetch = FetchType.LAZY
     )
     private Page pageFrom;
 
     @ManyToOne(
             targetEntity =  Page.class,
-            fetch = FetchType.LAZY,
-            cascade = CascadeType.ALL
+            fetch = FetchType.LAZY
     )
     private Page pageTo;
 

@@ -2,6 +2,7 @@ package wier23.entity;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
 import javax.annotation.Nullable;
@@ -41,7 +42,7 @@ public class Page implements Serializable
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
-    @Column(length = 3000)
+    @Column(length = 3000, unique = true)
     private String url;
 
     @Column(columnDefinition = "TEXT")
@@ -65,9 +66,10 @@ public class Page implements Serializable
 
     @OneToMany(
             targetEntity = Image.class,
+            cascade = CascadeType.ALL,
             mappedBy = "page"
     )
-    private Set<Image> images;
+    private List<Image> images;
 
     @OneToMany(
             targetEntity = PageData.class,

@@ -3,6 +3,7 @@ package wier23.entity;
 import java.io.Serializable;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -24,6 +25,8 @@ import lombok.Setter;
 )
 public class PageData implements Serializable
 {
+    private static final long serialVersionUID = 1L;
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
@@ -36,8 +39,7 @@ public class PageData implements Serializable
     private DataType dataType;
 
     @ManyToOne(
-            targetEntity =  Page.class,
-            optional = false
+            fetch = FetchType.LAZY
     )
     private Page page;
 }

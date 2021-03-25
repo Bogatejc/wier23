@@ -1,8 +1,5 @@
 package wier23.service;
 
-import java.util.List;
-import java.util.logging.Logger;
-
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
@@ -17,7 +14,6 @@ import wier23.repository.LinkRepository;
 @AllArgsConstructor
 public class LinkService
 {
-    private final Logger logger = Logger.getLogger(LinkService.class.getName());
 
     @PersistenceContext
     private final EntityManager entityManager;
@@ -27,11 +23,6 @@ public class LinkService
     @Transactional
     public Link saveLink(Link link) {
         return entityManager.merge(link);
-    }
-
-    @Transactional
-    public void saveAllLinks(List<Link> linkList) {
-        linkList.forEach(entityManager::merge);
     }
 
     @Transactional

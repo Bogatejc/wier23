@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -37,7 +38,8 @@ public class Image implements Serializable
 
     private LocalDateTime accessedTime;
 
-    @Id
-    @ManyToOne(targetEntity =  Page.class, optional = false)
+    @ManyToOne(
+            fetch = FetchType.LAZY
+    )
     private Page page;
 }
