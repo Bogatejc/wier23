@@ -95,7 +95,6 @@ public class FrontierService
                             .map(Site::getDomainDelay)
                             .orElse(5f);
 
-                    // TODO check robots.txt for any other possible restrictions
                     LocalDateTime lastAccessTime = domainsHashMap.get(domain);
                     if (LocalDateTime.now().isAfter(lastAccessTime.plusSeconds(Math.round(domainDelay))))
                     {
