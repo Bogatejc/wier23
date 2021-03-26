@@ -66,22 +66,12 @@ public class PageCrawl implements Callable<PageCrawl>
         {
             // Get site if it already exists, otherwise create new one
             String domain = Utils.getDomainFromUrl(page.getUrl());
-
-            Optional<Site> optionalSite = siteService.findByDomain(domain);
-            Site site;
-            if (optionalSite.isEmpty()) {
-                site = createSite(domain);
-                // TODO Add if that checks the url with robot.txt rules and just return if it's not ok
-                if (false) {
-                    return this;
-                }
-            } else {
-                site = optionalSite.get();
-            }
+            Site site = getOrCreateSite(domain);
 
             if (site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
             {
                 RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
+                // TODO check robots rules and return this if we're not allowed to visit the site
             }
 
             page.setAccessedTime(LocalDateTime.now());
@@ -162,32 +152,34 @@ public class PageCrawl implements Callable<PageCrawl>
         linkService.saveLink(link);
     }
 
-    private Site createSite(String domain)
+    private Site getOrCreateSite(String domain)
     {
-        // TODO add sitemap
-        Site newSite = new Site();
-        newSite.setDomain(domain);
+        return siteService.findByDomain(domain)
+                .orElseGet(() -> {
+                    Site newSite = new Site();
+                    newSite.setDomain(domain);
 
-        try
-        {
-            frontierService.makeRequest("http://" + domain + "/robots.txt", newSite, chromeDriver);
-            if (!chromeDriver.getTitle().contains("404") && !chromeDriver.findElementByTagName("body").getText().contains("404"))
-            {
-                newSite.setRobotsContent(chromeDriver.findElementByTagName("body").getText());
-                Optional.ofNullable(Utils.parseRobotsTxt(newSite.getRobotsContent()))
-                        .ifPresent(robotsTxt -> {
-                            if (robotsTxt.getCrawlDelay() > 0) {
-                                newSite.setDomainDelay(robotsTxt.getCrawlDelay());
-                            }
-                        });
-            }
+                    try
+                    {
+                        frontierService.makeRequest("http://" + domain + "/robots.txt", newSite, chromeDriver);
+                        if (!chromeDriver.getTitle().contains("404") && !chromeDriver.findElementByTagName("body").getText().contains("404"))
+                        {
+                            newSite.setRobotsContent(chromeDriver.findElementByTagName("body").getText());
+                            Optional.ofNullable(Utils.parseRobotsTxt(newSite.getRobotsContent()))
+                                    .ifPresent(robotsTxt -> {
+                                        if (robotsTxt.getCrawlDelay() > 0) {
+                                            newSite.setDomainDelay(robotsTxt.getCrawlDelay());
+                                        }
+                                    });
+                        }
 
-        }
-        catch (WebDriverException e)
-        {
-            // domain doesn't have robots.txt, so leave it as null
-        }
-        return siteService.saveSite(newSite);
+                    }
+                    catch (WebDriverException e)
+                    {
+                        // domain doesn't have robots.txt, so leave it as null
+                    }
+                    return siteService.saveSite(newSite);
+                });
     }
 
     private void extractImages(LogEntries logEntries)
@@ -286,8 +278,6 @@ public class PageCrawl implements Callable<PageCrawl>
 //            logger.warning(url + " " + e.getMessage());
             return;
         }
-
-        // TODO Add if that checks the url with robot.txt rules and just return if it's not ok
 
         if (newPagesHashMap.containsKey(canonicalUrl)) {
             Link link = new Link();
