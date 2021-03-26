@@ -67,12 +67,17 @@ public class PageCrawl implements Callable<PageCrawl>
             // Get site if it already exists, otherwise create new one
             String domain = Utils.getDomainFromUrl(page.getUrl());
 
-            // TODO replace with if present so you can return this
-            Site site = siteService.findByDomain(domain).orElseGet(() -> {
-                return createSite(domain);
+            Optional<Site> optionalSite = siteService.findByDomain(domain);
+            Site site;
+            if (optionalSite.isEmpty()) {
+                site = createSite(domain);
                 // TODO Add if that checks the url with robot.txt rules and just return if it's not ok
-            });
-
+                if (false) {
+                    return this;
+                }
+            } else {
+                site = optionalSite.get();
+            }
 
             if (site.getRobotsContent() != null && !site.getRobotsContent().isEmpty())
             {
