@@ -12,7 +12,6 @@ import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import jdk.jshell.execution.Util;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.openqa.selenium.WebDriverException;
@@ -105,7 +104,7 @@ public class PageCrawl implements Callable<PageCrawl>
                 // If not duplicate, crawl for links and save
                 extractUrlsByATag();
                 extractImages(logEntries);
-                extractUrlsByOnClickElements(page.getUrl());
+                extractUrlsByOnClickElements();
 
                 page.setPageType(PageType.HTML);
                 page.setHtmlContent(body);
@@ -221,7 +220,7 @@ public class PageCrawl implements Callable<PageCrawl>
         page.setImages(images);
     }
 
-    private void extractUrlsByOnClickElements(String pageUrl)
+    private void extractUrlsByOnClickElements()
     {
         List<WebElement> onclickElements = chromeDriver.findElementsByXPath("//*[@onclick]");
         for(WebElement onclickEl : onclickElements)
@@ -234,9 +233,9 @@ public class PageCrawl implements Callable<PageCrawl>
                 if(pth.startsWith("http") || pth.startsWith("www")){
                     checkAndAddToList(pth);
                 } else if(pth.startsWith("/")){
-                    checkAndAddToList(page + pth);
+                    checkAndAddToList(page.getUrl() + pth);
                 } else if(pth.endsWith(".html")){
-                    checkAndAddToList(page + "/" + pth);
+                    checkAndAddToList(page.getUrl() + "/" + pth);
                 }
             }
             else if(onclickAttr.startsWith("document.location"))
@@ -246,9 +245,9 @@ public class PageCrawl implements Callable<PageCrawl>
                 if(pth.startsWith("http") || pth.startsWith("www")){
                     checkAndAddToList(pth);
                 } else if(pth.startsWith("/")){
-                    checkAndAddToList(page + pth);
+                    checkAndAddToList(page.getUrl() + pth);
                 } else if(pth.endsWith(".html")){
-                    checkAndAddToList(page + "/" + pth);
+                    checkAndAddToList(page.getUrl() + "/" + pth);
                 }
             }
         }
