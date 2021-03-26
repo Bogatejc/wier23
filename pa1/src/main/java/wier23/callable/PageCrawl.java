@@ -73,13 +73,11 @@ public class PageCrawl implements Callable<PageCrawl>
             {
                 RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
                 // TODO check robots rules and return this if we're not allowed to visit the site
-                for(String disallowedPage : robotsTxt.getDisallowedPages()){
-                    if(disallowedPage.endsWith("*")){
+                for(String disallowedPage : robotsTxt.getDisallowedPages()) {
+                    if(disallowedPage.endsWith("*")) {
                         disallowedPage = disallowedPage.substring(0, disallowedPage.length() - 1);
                     }
-                    if(page.getUrl().contains(disallowedPage)){
-                        logger.info("Prepovedan dostop na " + page.getUrl());
-                        logger.info(robotsTxt.getDisallowedPages().toString());
+                    if(page.getUrl().contains(disallowedPage)) {
                         return this;
                     }
                 }
@@ -120,8 +118,7 @@ public class PageCrawl implements Callable<PageCrawl>
             // This can happen when parsing domain name
             logger.warning(e.getMessage());
 
-        } catch (WebDriverException e)
-        {
+        } catch (WebDriverException e) {
             // Invalid page
             logger.warning(e.getMessage());
             logger.warning("Removing page from database.");
@@ -129,8 +126,7 @@ public class PageCrawl implements Callable<PageCrawl>
             linkService.deleteLinkByPageId(page.getId());
             pageService.deletePage(page);
 
-        } catch (DataIntegrityViolationException e)
-        {
+        } catch (DataIntegrityViolationException e) {
             // Page with this content hash already exists
             // This can happen because of multithreading
             // Save as duplicate
@@ -183,8 +179,8 @@ public class PageCrawl implements Callable<PageCrawl>
                                             newSite.setDomainDelay(robotsTxt.getCrawlDelay());
                                         }
 
-                                        if(robotsTxt.getSitemaps().size() > 0){
-                                            for(String sitemapUrl : robotsTxt.getSitemaps()){
+                                        if(robotsTxt.getSitemaps().size() > 0) {
+                                            for(String sitemapUrl : robotsTxt.getSitemaps()) {
                                                 frontierService.makeRequest(sitemapUrl, newSite, chromeDriver);
                                                 newSite.setSitemapContent(chromeDriver.findElementByTagName("body").getText());
                                                 checkAndAddToList(sitemapUrl);
