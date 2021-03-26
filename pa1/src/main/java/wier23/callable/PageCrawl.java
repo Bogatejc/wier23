@@ -12,6 +12,7 @@ import java.util.concurrent.Callable;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import jdk.jshell.execution.Util;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.openqa.selenium.WebDriverException;
@@ -72,6 +73,16 @@ public class PageCrawl implements Callable<PageCrawl>
             {
                 RobotsTxt robotsTxt = Utils.parseRobotsTxt(site.getRobotsContent());
                 // TODO check robots rules and return this if we're not allowed to visit the site
+                for(String disallowedPage : robotsTxt.getDisallowedPages()){
+                    if(disallowedPage.endsWith("*")){
+                        disallowedPage = disallowedPage.substring(0, disallowedPage.length() - 1);
+                    }
+                    if(page.getUrl().contains(disallowedPage)){
+                        logger.info("Prepovedan dostop na " + page.getUrl());
+                        logger.info(robotsTxt.getDisallowedPages().toString());
+                        return this;
+                    }
+                }
             }
 
             page.setAccessedTime(LocalDateTime.now());
@@ -96,7 +107,7 @@ public class PageCrawl implements Callable<PageCrawl>
                 // If not duplicate, crawl for links and save
                 extractUrlsByATag();
                 extractImages(logEntries);
-                extractUrlsByOnClickElements();
+                extractUrlsByOnClickElements(page.getUrl());
 
                 page.setPageType(PageType.HTML);
                 page.setHtmlContent(body);
@@ -171,6 +182,14 @@ public class PageCrawl implements Callable<PageCrawl>
                                         if (robotsTxt.getCrawlDelay() > 0) {
                                             newSite.setDomainDelay(robotsTxt.getCrawlDelay());
                                         }
+
+                                        if(robotsTxt.getSitemaps().size() > 0){
+                                            for(String sitemapUrl : robotsTxt.getSitemaps()){
+                                                frontierService.makeRequest(sitemapUrl, newSite, chromeDriver);
+                                                newSite.setSitemapContent(chromeDriver.findElementByTagName("body").getText());
+                                                checkAndAddToList(sitemapUrl);
+                                            }
+                                        }
                                     });
                         }
 
@@ -206,9 +225,8 @@ public class PageCrawl implements Callable<PageCrawl>
         page.setImages(images);
     }
 
-    private void extractUrlsByOnClickElements()
+    private void extractUrlsByOnClickElements(String pageUrl)
     {
-        // TODO Finish this
         List<WebElement> onclickElements = chromeDriver.findElementsByXPath("//*[@onclick]");
         for(WebElement onclickEl : onclickElements)
         {
@@ -217,11 +235,25 @@ public class PageCrawl implements Callable<PageCrawl>
             {
                 String pth = onclickAttr.substring(14);
 
-//                logger.info(onclickAttr);
+                if(pth.startsWith("http") || pth.startsWith("www")){
+                    checkAndAddToList(pth);
+                } else if(pth.startsWith("/")){
+                    checkAndAddToList(page + pth);
+                } else if(pth.endsWith(".html")){
+                    checkAndAddToList(page + "/" + pth);
+                }
             }
             else if(onclickAttr.startsWith("document.location"))
             {
-//                logger.info(onclickAttr);
+                String pth = onclickAttr.substring(18);
+
+                if(pth.startsWith("http") || pth.startsWith("www")){
+                    checkAndAddToList(pth);
+                } else if(pth.startsWith("/")){
+                    checkAndAddToList(page + pth);
+                } else if(pth.endsWith(".html")){
+                    checkAndAddToList(page + "/" + pth);
+                }
             }
         }
     }
