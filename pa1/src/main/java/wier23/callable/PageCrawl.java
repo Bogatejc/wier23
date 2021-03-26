@@ -267,22 +267,7 @@ public class PageCrawl implements Callable<PageCrawl>
                         url = page.getUrl() + url;
                     }
 
-                    int beginIndex = url.lastIndexOf(".");
-                    if (beginIndex != -1) {
-                        String dataType = url.substring(beginIndex).toUpperCase();
-                        if (DataType.allDataTypes.contains(dataType))
-                        {
-                            PageData pageData = new PageData();
-                            pageData.setDataType(new DataType(dataType));
-                            pageData.setPage(page);
-                        }
-                        else
-                        {
-                            checkAndAddToList(url);
-                        }
-                    } else {
-                        checkAndAddToList(url);
-                    }
+                    checkAndAddToList(url);
                 }
             });
 
@@ -298,6 +283,19 @@ public class PageCrawl implements Callable<PageCrawl>
      */
     private void checkAndAddToList(String url)
     {
+        int beginIndex = url.lastIndexOf(".");
+        if (beginIndex != -1)
+        {
+            String dataType = url.substring(beginIndex).toUpperCase();
+            if (DataType.allDataTypes.contains(dataType))
+            {
+                logger.info("PAGE DATA: " + url);
+                PageData pageData = new PageData();
+                pageData.setDataType(new DataType(dataType));
+                pageData.setPage(page);
+            }
+        }
+
         String canonicalUrl;
         try
         {

@@ -76,6 +76,7 @@ public class Page implements Serializable
 
     @OneToMany(
             targetEntity = PageData.class,
+            cascade = CascadeType.ALL,
             mappedBy = "page"
     )
     private Set<PageData> pageData;
