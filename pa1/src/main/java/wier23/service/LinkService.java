@@ -21,8 +21,8 @@ public class LinkService
     private final LinkRepository linkRepository;
 
     @Transactional
-    public Link saveLink(Link link) {
-        return entityManager.merge(link);
+    public void saveLink(Link link) {
+        entityManager.merge(link);
     }
 
     @Transactional

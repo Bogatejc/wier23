@@ -128,7 +128,6 @@ public class CrawlManagerService
 
     @PreDestroy
     private void preDestroy() {
-        logger.info("Quitting all selenium drivers!");
         driverQueue.forEach(RemoteWebDriver::close);
         driverQueue.forEach(RemoteWebDriver::quit);
     }

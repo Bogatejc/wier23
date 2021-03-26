@@ -7,7 +7,6 @@ import java.util.Queue;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
-import wier23.entity.ContentHash;
 import wier23.entity.Page;
 import wier23.entity.PageType;
 import wier23.repository.PageRepository;
@@ -23,7 +22,7 @@ public class PageService
         return pageRepository.save(page);
     }
 
-    public List<Page> findByContentHash(ContentHash contentHash) {
+    public Optional<Page> findByContentHash(byte[] contentHash) {
         return pageRepository.findByContentHash(contentHash);
     }
 

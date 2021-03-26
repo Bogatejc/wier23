@@ -15,7 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.Index;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 
 import lombok.EqualsAndHashCode;
@@ -32,7 +31,8 @@ import lombok.Setter;
         schema = "crawldb",
         name = "page",
         indexes = {
-                @Index(columnList = "url")
+                @Index(columnList = "url"),
+                @Index(columnList = "contentHash")
         })
 public class Page implements Serializable
 {
@@ -47,6 +47,9 @@ public class Page implements Serializable
 
     @Column(columnDefinition = "TEXT")
     private String htmlContent;
+
+    @Column(unique = true)
+    private byte[] contentHash;
 
     @Nullable
     private Integer httpStatusCode;
@@ -76,11 +79,4 @@ public class Page implements Serializable
             mappedBy = "page"
     )
     private Set<PageData> pageData;
-
-
-    @OneToOne(
-            cascade = CascadeType.ALL
-    )
-    private ContentHash contentHash;
-
 }

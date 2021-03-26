@@ -19,10 +19,10 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.logging.LogEntries;
 import org.openqa.selenium.logging.LogType;
+import org.springframework.dao.DataIntegrityViolationException;
 
 import wier23.Utils;
 import wier23.dtos.RobotsTxt;
-import wier23.entity.ContentHash;
 import wier23.entity.DataType;
 import wier23.entity.Image;
 import wier23.entity.Link;
@@ -88,27 +88,10 @@ public class PageCrawl implements Callable<PageCrawl>
             String body = chromeDriver.findElementByTagName("body").getText();
             MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
             messageDigest.update(body.getBytes());
-
-            ContentHash contentHash = new ContentHash();
-            contentHash.setHash(messageDigest.digest());
+            byte[] contentHash = messageDigest.digest();
 
             // Check for duplicates by content hash
-            List<Page> originalPages = pageService.findByContentHash(contentHash);
-            if (!originalPages.isEmpty())
-            {
-                // If duplicate, save as duplicate and create link
-                Link link = new Link();
-                link.setPageFrom(page);
-                link.setPageTo(originalPages.get(0));
-
-                page.setPageType(PageType.DUPLICATE);
-                page.setContentHash(null);
-                page.setHtmlContent(null);
-
-                pageService.savePage(page);
-                linkService.saveLink(link);
-            }
-            else {
+            pageService.findByContentHash(contentHash).ifPresentOrElse(this::saveDuplicatePage, () -> {
                 // If not duplicate, crawl for links and save
                 extractUrlsByATag();
                 extractImages(logEntries);
@@ -119,13 +102,14 @@ public class PageCrawl implements Callable<PageCrawl>
                 page.setContentHash(contentHash);
 
                 pageService.savePage(page);
-            }
+            });
 
         } catch (URISyntaxException e) {
             // This can happen when parsing domain name
             logger.warning(e.getMessage());
 
-        } catch (WebDriverException e) {
+        } catch (WebDriverException e)
+        {
             // Invalid page
             logger.warning(e.getMessage());
             logger.warning("Removing page from database.");
@@ -133,12 +117,38 @@ public class PageCrawl implements Callable<PageCrawl>
             linkService.deleteLinkByPageId(page.getId());
             pageService.deletePage(page);
 
+        } catch (DataIntegrityViolationException e)
+        {
+            // Page with this content hash already exists
+            // This can happen because of multithreading
+            // Save as duplicate
+
+            logger.warning("Tried to save page with existing content hash. Saving as duplicate instead.");
+            pageService.findByContentHash(page.getContentHash()).ifPresentOrElse(this::saveDuplicatePage, () -> {
+                // If page with such content hash does not yet exist, rethrow the exception
+                throw e;
+            });
+
         } catch (NoSuchAlgorithmException e) {
             // This should never happen
             logger.severe(e.getMessage());
         }
 
         return this;
+    }
+
+    private void saveDuplicatePage(Page originalPage)
+    {
+        Link link = new Link();
+        link.setPageFrom(page);
+        link.setPageTo(originalPage);
+
+        page.setPageType(PageType.DUPLICATE);
+        page.setContentHash(null);
+        page.setHtmlContent(null);
+
+        pageService.savePage(page);
+        linkService.saveLink(link);
     }
 
     private Site getOrCreateSite(String domain)
