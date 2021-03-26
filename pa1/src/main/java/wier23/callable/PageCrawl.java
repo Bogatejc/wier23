@@ -158,6 +158,7 @@ public class PageCrawl implements Callable<PageCrawl>
                 .orElseGet(() -> {
                     Site newSite = new Site();
                     newSite.setDomain(domain);
+                    // TODO Save sitemap
 
                     try
                     {
@@ -207,6 +208,7 @@ public class PageCrawl implements Callable<PageCrawl>
 
     private void extractUrlsByOnClickElements()
     {
+        // TODO Finish this
         List<WebElement> onclickElements = chromeDriver.findElementsByXPath("//*[@onclick]");
         for(WebElement onclickEl : onclickElements)
         {
