@@ -235,29 +235,31 @@ public class PageCrawl implements Callable<PageCrawl>
         List<WebElement> onclickElements = chromeDriver.findElementsByXPath("//*[@onclick]");
         for(WebElement onclickEl : onclickElements)
         {
-            String onclickAttr = onclickEl.getAttribute("onclick");
-            if(onclickAttr.startsWith("location.href"))
-            {
-                String pth = onclickAttr.substring(14);
+            if (onclickEl.getAttribute("onclick") != null) {
+                String onclickAttr = onclickEl.getAttribute("onclick");
+                if(onclickAttr.startsWith("location.href"))
+                {
+                    String pth = onclickAttr.substring(14);
 
-                if(pth.startsWith("http") || pth.startsWith("www")){
-                    checkAndAddToList(pth);
-                } else if(pth.startsWith("/")){
-                    checkAndAddToList(page.getUrl() + pth);
-                } else if(pth.endsWith(".html")){
-                    checkAndAddToList(page.getUrl() + "/" + pth);
+                    if(pth.startsWith("http") || pth.startsWith("www")){
+                        checkAndAddToList(pth);
+                    } else if(pth.startsWith("/")){
+                        checkAndAddToList(page.getUrl() + pth);
+                    } else if(pth.endsWith(".html")){
+                        checkAndAddToList(page.getUrl() + "/" + pth);
+                    }
                 }
-            }
-            else if(onclickAttr.startsWith("document.location"))
-            {
-                String pth = onclickAttr.substring(18);
+                else if(onclickAttr.startsWith("document.location"))
+                {
+                    String pth = onclickAttr.substring(18);
 
-                if(pth.startsWith("http") || pth.startsWith("www")){
-                    checkAndAddToList(pth);
-                } else if(pth.startsWith("/")){
-                    checkAndAddToList(page.getUrl() + pth);
-                } else if(pth.endsWith(".html")){
-                    checkAndAddToList(page.getUrl() + "/" + pth);
+                    if(pth.startsWith("http") || pth.startsWith("www")){
+                        checkAndAddToList(pth);
+                    } else if(pth.startsWith("/")){
+                        checkAndAddToList(page.getUrl() + pth);
+                    } else if(pth.endsWith(".html")){
+                        checkAndAddToList(page.getUrl() + "/" + pth);
+                    }
                 }
             }
         }
