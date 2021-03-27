@@ -298,7 +298,6 @@ public class PageCrawl implements Callable<PageCrawl>
             String dataType = url.substring(beginIndex + 1).toUpperCase();
             if (DataType.allDataTypes.contains(dataType))
             {
-                logger.info("PAGE DATA: " + url);
                 PageData pageData = new PageData();
                 pageData.setDataType(new DataType(dataType));
                 pageData.setPage(page);
