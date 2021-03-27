@@ -3,7 +3,6 @@ package wier23.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.Nullable;
 import javax.persistence.CascadeType;
@@ -79,5 +78,5 @@ public class Page implements Serializable
             cascade = CascadeType.ALL,
             mappedBy = "page"
     )
-    private Set<PageData> pageData;
+    private List<PageData> pageData;
 }

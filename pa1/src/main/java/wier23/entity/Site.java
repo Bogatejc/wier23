@@ -23,6 +23,7 @@ public class Site
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     private Long id;
 
+    @Column(unique = true)
     private String domain;
 
     @Column(columnDefinition = "TEXT")

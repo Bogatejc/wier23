@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -48,6 +49,7 @@ public class PageCrawl implements Callable<PageCrawl>
 
     private final Page page;
     private final HashMap<String, Page> newPagesHashMap;
+    private final List<PageData> pageDataList = new LinkedList<>();
 
     public PageCrawl(Page page, ChromeDriver chromeDriver, FrontierService frontierService, PageService pageService, SiteService siteService, LinkService linkService)
     {
@@ -110,6 +112,7 @@ public class PageCrawl implements Callable<PageCrawl>
                 page.setHtmlContent(body);
                 page.setContentHash(contentHash);
 
+                page.setPageData(pageDataList);
                 pageService.savePage(page);
             });
 
@@ -193,7 +196,14 @@ public class PageCrawl implements Callable<PageCrawl>
                     {
                         // domain doesn't have robots.txt, so leave it as null
                     }
-                    return siteService.saveSite(newSite);
+
+                    try {
+                        return siteService.saveSite(newSite);
+                    }
+                    catch (DataIntegrityViolationException e) {
+                        logger.warning("Tried to save Site with existing domain.");
+                        return siteService.findByDomain(domain).orElseThrow(() -> e);
+                    }
                 });
     }
 
@@ -285,13 +295,14 @@ public class PageCrawl implements Callable<PageCrawl>
         int beginIndex = url.lastIndexOf(".");
         if (beginIndex != -1)
         {
-            String dataType = url.substring(beginIndex).toUpperCase();
+            String dataType = url.substring(beginIndex + 1).toUpperCase();
             if (DataType.allDataTypes.contains(dataType))
             {
                 logger.info("PAGE DATA: " + url);
                 PageData pageData = new PageData();
                 pageData.setDataType(new DataType(dataType));
                 pageData.setPage(page);
+                pageDataList.add(pageData);
             }
         }
 
