@@ -32,6 +32,13 @@ public class DataType implements Serializable
     public static final DataType DOCX = new DataType("DOCX");
     public static final DataType PPT = new DataType("PPT");
     public static final DataType PPTX = new DataType("PPTX");
+    public static final DataType MP4 = new DataType("MP4");
+    public static final DataType MP3 = new DataType("MP3");
+    public static final DataType XLSX = new DataType("XLSX");
+    public static final DataType ZIP = new DataType("ZIP");
+    public static final DataType SEVEN_ZIP = new DataType("7ZIP");
+    public static final DataType RAR = new DataType("RAR");
+    public static final DataType EXE = new DataType("EXE");
 
 
     @Id
