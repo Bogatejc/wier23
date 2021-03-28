@@ -308,6 +308,7 @@ public class PageCrawl implements Callable<PageCrawl>
                 pageData.setDataType(new DataType(dataType));
                 pageData.setPage(page);
                 pageDataList.add(pageData);
+                return;
             }
         }
 
