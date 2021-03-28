@@ -17,4 +17,6 @@ public interface PageRepository extends JpaRepository<Page, Long>
     Optional<Page> findByContentHash(byte[] contentHash);
 
     LinkedList<Page> findAllByPageType(PageType pageType);
+
+    LinkedList<Page> findAllByPageTypeOrderByIdAsc(PageType pageType);
 }

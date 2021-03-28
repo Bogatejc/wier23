@@ -1,6 +1,5 @@
 package wier23.service;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
 
@@ -35,6 +34,6 @@ public class PageService
     }
 
     public Queue<Page> getFrontier() {
-        return pageRepository.findAllByPageType(PageType.FRONTIER);
+        return pageRepository.findAllByPageTypeOrderByIdAsc(PageType.FRONTIER);
     }
 }
