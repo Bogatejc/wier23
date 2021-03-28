@@ -307,6 +307,16 @@ public class PageCrawl implements Callable<PageCrawl>
             }
         }
 
+        try {
+            String domain = Utils.getDomainFromUrl(url);
+            if (!domain.contains("gov.si")) {
+                return;
+            }
+
+        } catch (URISyntaxException e) {
+            return;
+        }
+
         String canonicalUrl;
         try
         {
@@ -314,7 +324,6 @@ public class PageCrawl implements Callable<PageCrawl>
         }
         catch (Exception e)
         {
-//            logger.warning(url + " " + e.getMessage());
             return;
         }
 
@@ -375,7 +384,10 @@ public class PageCrawl implements Callable<PageCrawl>
                     {
                         Thread.sleep(frontierService.getDomainLeftDelayInMillis(page.getSite()));
                         frontierService.updateDomainTime(page.getSite().getDomain());
-                        return Jsoup.connect(page.getUrl()).execute().statusCode();
+                        return Jsoup.connect(page.getUrl())
+                                .timeout(30000)
+                                .execute()
+                                .statusCode();
                     }
                     catch (IOException | InterruptedException e)
                     {
