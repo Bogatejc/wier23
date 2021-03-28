@@ -79,6 +79,8 @@ public class PageCrawl implements Callable<PageCrawl>
                         disallowedPage = disallowedPage.substring(0, disallowedPage.length() - 1);
                     }
                     if(page.getUrl().contains(disallowedPage)) {
+                        linkService.deleteLinkByPageId(page.getId());
+                        pageService.deletePage(page);
                         return this;
                     }
                 }
