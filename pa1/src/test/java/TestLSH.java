@@ -60,6 +60,7 @@ public class TestLSH {
         chromeDriver.quit();
 
         LSH lsh = new LSH(set1, set2);
-        lsh.compute();
+        double jaccDist = lsh.compute();
+        System.out.println("Computed jaccard distance is: " + jaccDist);
     }
 }

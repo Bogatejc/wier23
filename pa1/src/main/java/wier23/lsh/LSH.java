@@ -26,7 +26,7 @@ public class LSH {
     /**
      * This is the main method that prepares and computes hash values.
      */
-    public void compute() {
+    public double compute() {
         for(int i = 0; i < 2; i++) {
             for(int j = 0; j < hashSize; j++) {
                 minHashValues[i][j] = Integer.MAX_VALUE;
@@ -43,7 +43,7 @@ public class LSH {
         }
 
         buildBitmaps();
-        computeSimilarity();
+        return computeSimilarity();
     }
 
     /**
@@ -79,9 +79,8 @@ public class LSH {
 
     /**
      * This is a helper method, that prepares two sets of integers and then returns the Jaccard distance between them.
-     * It also outputs weather the input strings are duplicates or not.
      */
-    private void computeSimilarity() {
+    private double computeSimilarity() {
         computeMinHashSignature();
 
         Set<Integer> set1MinHashValues = new HashSet<>();
@@ -92,8 +91,7 @@ public class LSH {
         for(int i = 0; i < minHashValues[1].length; i++) {
             set2MinHashValues.add(minHashValues[1][i]);
         }
-        double jaccDist = jaccardDistance(set1MinHashValues, set2MinHashValues);
-        System.out.println("Computed jaccard distance is: " + jaccDist);
+        return jaccardDistance(set1MinHashValues, set2MinHashValues);
     }
 
     /**
