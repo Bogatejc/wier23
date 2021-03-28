@@ -66,6 +66,20 @@ public class PageCrawl implements Callable<PageCrawl>
     {
         try
         {
+            int beginIndex = page.getUrl().lastIndexOf(".");
+            if (beginIndex != -1)
+            {
+                String dataType = page.getUrl().substring(beginIndex + 1).toUpperCase();
+                if (DataType.allDataTypes.contains(dataType))
+                {
+                    // PageData is saved elsewhere, page with such url should never have been in the frontier
+                    linkService.deleteLinkByPageId(page.getId());
+                    pageService.deletePage(page);
+                    return this;
+                }
+            }
+
+
             // Get site if it already exists, otherwise create new one
             String domain = Utils.getDomainFromUrl(page.getUrl());
             Site site = getOrCreateSite(domain);
