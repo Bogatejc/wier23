@@ -109,6 +109,8 @@ public class FrontierService
             catch (URISyntaxException e)
             {
                 logger.warning(e.getMessage());
+                linkService.deleteLinkByPageId(polledPage.getId());
+                pageService.deletePage(polledPage);
             }
         }
         return null;
