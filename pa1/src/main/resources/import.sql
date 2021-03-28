@@ -10,6 +10,7 @@ insert into crawldb.data_type (code) values ('ZIP');
 insert into crawldb.data_type (code) values ('7ZIP');
 insert into crawldb.data_type (code) values ('RAR');
 insert into crawldb.data_type (code) values ('EXE');
+insert into crawldb.data_type (code) values ('XLS');
 
 insert into crawldb.page_type (code) values ('HTML');
 insert into crawldb.page_type (code) values ('BINARY');

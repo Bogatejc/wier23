@@ -25,7 +25,7 @@ import lombok.Setter;
 )
 public class DataType implements Serializable
 {
-    public static final Set<String> allDataTypes = Set.of("PDF", "DOC", "DOCX", "PPT", "PPTX", "MP4", "MP3", "XLSX", "ZIP", "7ZIP", "RAR", "EXE");
+    public static final Set<String> allDataTypes = Set.of("PDF", "DOC", "DOCX", "PPT", "PPTX", "MP4", "MP3", "XLSX", "XLS", "ZIP", "7ZIP", "RAR", "EXE");
 
     public static final DataType PDF = new DataType("PDF");
     public static final DataType DOC = new DataType("DOC");
@@ -35,6 +35,7 @@ public class DataType implements Serializable
     public static final DataType MP4 = new DataType("MP4");
     public static final DataType MP3 = new DataType("MP3");
     public static final DataType XLSX = new DataType("XLSX");
+    public static final DataType XLS = new DataType("XLS");
     public static final DataType ZIP = new DataType("ZIP");
     public static final DataType SEVEN_ZIP = new DataType("7ZIP");
     public static final DataType RAR = new DataType("RAR");
