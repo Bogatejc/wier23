@@ -121,6 +121,8 @@ public class PageCrawl implements Callable<PageCrawl>
         } catch (URISyntaxException e) {
             // This can happen when parsing domain name
             logger.warning(e.getMessage());
+            linkService.deleteLinkByPageId(page.getId());
+            pageService.deletePage(page);
 
         } catch (WebDriverException e) {
             // Invalid page
