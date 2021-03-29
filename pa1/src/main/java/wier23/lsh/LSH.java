@@ -55,7 +55,7 @@ public class LSH {
      */
     private int computeHash(int a, int b, int c) {
         int prod = a * b * c;
-        int hashValue = ((a * (prod >> 4) + b * prod + c) & 131071) + 5;
+        int hashValue = ((a * (prod >> 3) + b * prod + c) & 273115) + 7;
         return Math.abs(hashValue);
     }
 
