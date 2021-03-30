@@ -1,8 +1,8 @@
-## Project description
+# Project description
 This is a Java implementation of a web crawler with SpringBoot, that crawls over pages from `gov.si` domain and collects images, binary files and links to new pages.
 The crawler is using Selenium ChromeDriver for headless browsing.
 
-### Instructions
+## Instructions
 - This web crawler uses PostgreSQL database for storing the acquired data. Prepare a new PostgreSQL database
   and create a new schema called `crawldb`.
 - Open `pa1/crawler/src/main/resources/application.yml` and set the database URL, username and password accordingly.
@@ -25,10 +25,12 @@ The crawler is using Selenium ChromeDriver for headless browsing.
   # example
   mvn spring-boot:run -D spring-boot.run.arguments='D:/Programs/Selenium/chromedriver.exe 4'
   ```
-- Warning: Stopping the application will force close all instances of chromedriver and chrome. This was the only way we found,
+- **Warning**: Stopping the application will force close all instances of chromedriver and chrome. This was the only way we found,
   to actually close everything started by the application (from IDE).
+  
+- Seed urls can be set in file `pa1/crawler/src/main/resources/baseUrls`.
 
-### LSH testing
+## LSH testing
 [Here](crawler/src/main/java/wier23/lsh/LSH.java) we have an implementation of locality-sensitive hashing method.
 We also provided some helper test for easy running and testing. Go to `./src/test/java/TestLSH.java`,
 where you can set your own links to get crawled. At the end of the test we get computed Jaccard distance.
