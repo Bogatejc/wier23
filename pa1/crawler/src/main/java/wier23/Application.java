@@ -2,8 +2,6 @@ package wier23;
 
 import java.util.logging.Logger;
 
-import javax.annotation.PreDestroy;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
