@@ -30,6 +30,12 @@ The crawler is using Selenium ChromeDriver for headless browsing.
   
 - Seed urls can be set in file `pa1/crawler/src/main/resources/baseUrls`.
 
+## Database dump
+
+Database dump is available in two different formats:
+- file (sql): `pa1/db.sql`
+- custom: `pa1/db`
+
 ## LSH testing
 [Here](crawler/src/main/java/wier23/lsh/LSH.java) we have an implementation of locality-sensitive hashing method.
 We also provided some helper test for easy running and testing. Go to `./src/test/java/TestLSH.java`,
