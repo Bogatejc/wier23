@@ -33,8 +33,8 @@ The crawler is using Selenium ChromeDriver for headless browsing.
 ## Database dump
 
 Database dump is available in two different formats:
-- file (sql): `pa1/db.sql`
-- custom: `pa1/db`
+- file (sql): `pa1/db.sql` (389 MB)
+- custom: `pa1/db` (91 MB)
 
 ## LSH testing
 [Here](crawler/src/main/java/wier23/lsh/LSH.java) we have an implementation of locality-sensitive hashing method.
