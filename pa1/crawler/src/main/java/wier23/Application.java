@@ -28,7 +28,6 @@ public class Application
     public static void main(String[] args) {
         try
         {
-            // TODO fix this
             if(args.length > 0)
             {
                 System.setProperty("webdriver.chrome.driver", args[0]);
