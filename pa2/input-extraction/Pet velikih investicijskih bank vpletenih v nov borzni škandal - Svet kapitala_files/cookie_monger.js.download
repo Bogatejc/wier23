@@ -1,0 +1,75 @@
+const domains = [
+    '//www.delo.si/cookie/cookie_setter.php?d=delo.si',
+    '//www.slovenskenovice.si/cookie/cookie_setter.php?d=slovenskenovice.si'
+]
+const allowed = ['analiticni', 'oglasevalski', 'druzabni']
+
+function getCookie(c_name) {
+    var c_value = document.cookie;
+    var c_start = c_value.indexOf(" " + c_name + "=");
+    if (c_start == -1) {
+        c_start = c_value.indexOf(c_name + "=");
+    }
+    if (c_start == -1) {
+        c_value = null;
+    }
+    else {
+        c_start = c_value.indexOf("=", c_start) + 1;
+        var c_end = c_value.indexOf(";", c_start);
+        if (c_end == -1) {
+            c_end = c_value.length;
+        }
+        c_value = unescape(c_value.substring(c_start, c_end));
+    }
+    return c_value;
+}
+document.getCookie = getCookie
+
+function checkCookie(allowed_type) {
+    var status = false;
+    //Poskusim prebrati cookie allow_cookies
+    var cookie_value = getCookie("ALLOW_COOKIES");
+    if (cookie_value != null && cookie_value.indexOf(allowed_type) >= 0) {
+        //Ustrezno nastavim spremenljivko status, ce je allow_cookies vrednost za izbrano grupo cookijev nastavljena
+        status = true;
+    }
+    return status;
+}
+document.checkCookie = checkCookie
+
+function joinCookieArgs(data) {
+    if(data.length) {
+        return data.map(arg => allowed.includes(arg) ? `${arg}=on` : '' ).join('&')
+    } else {
+        return allowed.map(arg => `${arg}=on`).join('&')
+    }
+}
+function setCookies() {
+    var args = [...arguments].filter(item => !(item instanceof Event)) // Get rid of events
+    args = joinCookieArgs(args)
+    domains.forEach(domain => setCookieOnDomain(domain, args))
+}
+document.setCookies = setCookies
+
+function unsetCookies() {
+    var args = [...arguments].filter(item => !(item instanceof Event)) // Get rid of events
+    args = joinCookieArgs(args).replace(/=on/g, '=off')
+    domains.forEach(domain => setCookieOnDomain(domain, args))
+}
+document.unsetCookies = unsetCookies
+
+function setCookieOnDomain(cookie_setter_script, data_string) {
+    var iframe = document.createElement("iframe");
+    iframe.src = cookie_setter_script + "&" + data_string;
+    iframe.name = "frame1";
+    iframe.id = "frame1";
+    iframe.style.cssText = "display:none;";
+    document.body.appendChild(iframe);
+    document.body.style.cssText = "padding-bottom: 0px;";
+    var nodes = document.querySelectorAll('.notice')
+    for(x in nodes) {
+        if(nodes[x].style)
+            nodes[x].style.display = 'none'
+    }
+}
+document.setCookieOnDomain = setCookieOnDomain

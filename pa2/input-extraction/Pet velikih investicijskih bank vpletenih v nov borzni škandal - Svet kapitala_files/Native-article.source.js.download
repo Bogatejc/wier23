@@ -1,0 +1,348 @@
+(function (win) {
+
+    /**
+     * 1.005
+     */
+
+    var version = 1.005;
+
+    var layoutTable = {
+        '970x250': {
+            orientation: 'horizontal',
+            adUnitNum: 4,
+            width: 970,
+            height: 250,
+            adUnitOrientation: 'vertical',
+
+            adUnitLayout:   "<div style='position: relative; overflow: hidden; display: flex; flex-direction: column; margin: 0 2px; '> " +
+                                "<img class='iprom-native-ad-image' style='width: 100%;' /> " +
+                                "<div>"+
+                                    "<div class='iprom-native-ad-title' style='font-size: 14px; text-decoration: none; margin: 5px 5px 7px 5px; display: flex; flex-direction: column-reverse'></div> " +
+                                    "<div class='iprom-native-ad-text' style='margin: 2px 5px; font-size: 12px;'></div><style>.iprom-native-ad-unit:hover .iprom-native-ad-title { color: #1f5ab1; opacity: 1!important; }</style>" +
+                                "</div> " +
+                            "</div> ",
+
+            adUnitMargin: 4,
+            fontSize: 15
+        },
+        '732x250': {
+            orientation: 'horizontal',
+            adUnitNum: 3,
+            width: 732,
+            height: 250,
+            adUnitOrientation: 'vertical',
+
+            adUnitLayout:   "<div style='position: relative; overflow: hidden; display: flex; flex-direction: column; margin: 0 2px; '> " +
+                                "<img class='iprom-native-ad-image' style='width: 100%;' /> " +
+                                "<div>"+
+                                    "<div class='iprom-native-ad-title' style='font-size: 14px; text-decoration: none; margin: 5px 5px 7px 5px; display: flex; flex-direction: column-reverse'></div> " +
+                                    "<div class='iprom-native-ad-text' style='margin: 2px 5px; font-size: 12px;'></div><style>.iprom-native-ad-unit:hover .iprom-native-ad-title { color: #1f5ab1; opacity: 1!important; }</style>" +
+                                "</div> " +
+                            "</div> ",
+
+
+            adUnitMargin: 4,
+            fontSize: 15
+        },
+        '732x250_noimage': {
+            orientation: 'horizontal',
+            adUnitNum: 3,
+            width: 732,
+            height: 100,
+            adUnitOrientation: 'vertical',
+
+            adUnitLayout:   "<div style='position: relative; overflow: hidden; margin: 0 2px; '> " +
+                                "<div class='iprom-native-ad-title' style='font-size: 14px; text-decoration: none; margin: 5px 5px 7px 5px; display: flex; flex-direction: column-reverse'></div> " +
+                                "<div class='iprom-native-ad-text' style='margin: 2px 5px; font-size: 12px;'></div><style>.iprom-native-ad-unit:hover .iprom-native-ad-title { color: #1f5ab1; opacity: 1!important; }</style>" +
+                            "</div> ",
+
+
+            adUnitMargin: 4,
+            fontSize: 15,
+            image: false,
+            textMargin: '5px 4px'
+        },
+        '728x90': {
+            orientation: 'horizontal',
+            adUnitNum: 2,
+            width: 728,
+            height: 90,
+            adUnitOrientation: 'horizontal',
+
+            adUnitLayout: "<div style='position: relative; overflow: hidden; display: flex;'> " +
+                                "<img class='iprom-native-ad-image' style='height: 88px;' /> " +
+                                "<div>"+
+                                    "<div class='iprom-native-ad-title' style='font-size: 12px; text-decoration: none; margin: 5px; display: flex; flex-direction: column-reverse'></div> " +
+                                    "<div class='iprom-native-ad-text' style='margin: 2px 5px; font-size: 11px;'></div><style>.iprom-native-ad-unit:hover .iprom-native-ad-title { color: #1f5ab1; opacity: 1!important; }</style>" +
+                                "</div> " +
+                            "</div> ",
+
+            adUnitMargin: 4,
+            fontSize: 12,
+            textMargin: '5px 0'
+        },
+        '160x600': {
+            orientation: 'vertical',
+            adUnitNum: 2,
+            width: 160,
+            height: 600,
+            adUnitOrientation: 'vertical',
+
+            adUnitLayout:   "<div style='position: relative; overflow: hidden; display: flex; flex-direction: column;'> " +
+                                "<img class='iprom-native-ad-image' style='width: 100%;' /> " +
+                                "<div>"+
+                                    "<div class='iprom-native-ad-title' style='font-size: 13px; text-decoration: none; margin: 5px; display: flex; flex-direction: column-reverse'></div> " +
+                                    "<div class='iprom-native-ad-text' style='margin: 2px 5px; font-size: 12px;'></div><style>.iprom-native-ad-unit:hover .iprom-native-ad-title { color: #1f5ab1; opacity: 1!important; }</style>" +
+                                    "<div style='padding: 4px; background: #1f5ab1; color: #fff; margin: 10px 5px; width: 60px; text-align: center; font-size: 11px;'>Več o tem</div>" +
+                                "</div> " +
+                            "</div> ",
+            adUnitMargin: 4,
+            fontSize: 14,
+            textMargin: '5px 4px'
+        },
+        '300x250': {
+            orientation: 'vertical',
+            adUnitNum: 2,
+            width: 300,
+            height: 250,
+            adUnitOrientation: 'horizontal',
+
+            adUnitLayout: "<div style='position: relative; overflow: hidden; display: flex;'> " +
+                                "<img class='iprom-native-ad-image' style='max-width: 145px; max-height: 90px;flex: max-content;' /> " +
+                                "<div class='iprom-native-ad-title' style='font-size: 13px; text-decoration: none; margin: 5px; display: flex; flex-direction: column-reverse'></div> " +
+                            "</div> " +
+                            "<div class='iprom-native-ad-text' style='margin: 2px 5px; font-size: 12px;'></div><style>.iprom-native-ad-unit:hover .iprom-native-ad-title { color: #1f5ab1; opacity: 1!important; }</style>",
+
+            imageWidth: 145
+        },
+        '300x600': {
+            orientation: 'vertical',
+            adUnitNum: 6,
+            width: 300,
+            height: 600,
+            adUnitOrientation: 'horizontal',
+            fontSize: 13
+        }
+    };
+
+    var config = null;
+    var zoneHolder = null;
+    var salt = ipromNS.Utils.randomString(20);
+
+    while(typeof win["_loadIpromNative"+salt] != 'undefined') {
+        salt = ipromNS.Utils.randomString(20);
+    }
+
+    function renderAdUnit(ad, layout, size, index) {
+
+        var adSettings = ad.ad_settings;
+
+        var adUnit = document.createElement('div');
+        adUnit.className = 'iprom-native-ad-unit';
+
+        var clickLayer = document.createElement('a');
+        clickLayer.innerHTML = layout.adUnitLayout;
+
+        adUnit.appendChild(clickLayer);
+
+        var image = adUnit.querySelector('.iprom-native-ad-image') || null;
+        var label = adUnit.querySelector('.iprom-native-ad-title');
+        var text = adUnit.querySelector('.iprom-native-ad-text');
+
+        clickLayer.style.position = 'absolute';
+        clickLayer.style.top = clickLayer.style.left = 0;
+        clickLayer.style.width = clickLayer.style.height = '100%';
+        clickLayer.style.textDecoration = clickLayer.style.height = 'none';
+        clickLayer.style.color = clickLayer.style.height = '#000';
+
+        adUnit.style.width = size.width + 'px';
+        adUnit.style.height = size.height + 'px';
+
+        adUnit.style.float = 'left';
+        adUnit.style.boxSizing = 'border-box';
+        adUnit.style.overflow = 'hidden';
+        adUnit.style.cursor = 'pointer';
+        adUnit.style.position = 'relative';
+        adUnit.style.textAlign = 'left';
+        adUnit.style.fontFamily = 'Arial, Helvetica, sans-serif';
+
+        clickLayer.href = ad.tracking_links.c;
+        clickLayer.target = '_blank';
+
+        if(image) {
+            image.src = adSettings.image || adSettings.creatives.square.src;
+            image.style.border = 'none';
+            image.style.cursor = 'url(https://cdn.ipromcloud.com/custom/resources/click.png), auto';
+        }
+
+        label.textContent = adSettings.title_short;
+        label.style.fontWeight = 'bold';
+        text.style.color = '#333';
+        text.textContent = adSettings.text;
+
+
+        text.style.cursor = 'url(https://cdn.ipromcloud.com/custom/resources/click.png), auto';
+        label.style.cursor = 'url(https://cdn.ipromcloud.com/custom/resources/click.png), auto';
+
+        return adUnit;
+    }
+
+    function calcAdUnitSize(layout) {
+        var adUnitWidth;
+        var adUnitHeight;
+
+        if (layout.orientation == 'horizontal') {
+            adUnitWidth = (layout.width - 2) / layout.adUnitNum;
+            adUnitHeight = layout.height;
+        } else {
+            adUnitWidth = layout.width-2;
+            adUnitHeight = layout.height / layout.adUnitNum;
+        }
+
+        return {
+            width: adUnitWidth,
+            height: adUnitHeight
+        };
+    }
+
+    function buildContainer(layout) {
+        var container = document.createElement('div');
+
+        container.className =
+            'iprom-native-ad-container' +
+            ' iprom-native-' +
+            layout.width +
+            'x' +
+            layout.height;
+
+        container.style.display = 'flex';
+
+        if(layout.orientation == 'vertical') {
+            container.style.flexDirection = 'column';
+        }
+
+        container.style.border = '1px solid grey';
+        container.style.position = 'relative';
+        container.style.fontSize = layout.fontSize + 'px';
+        container.style.boxSizing = 'border-box';
+        container.style.width = layout.width + 'px';
+        container.style.height = layout.height + 'px';
+        container.style.backgroundColor = '#fff';
+
+        return container;
+    }
+
+    function wrapWithFIF(appendNode, element) {
+        var ifrm = document.createElement('iframe');
+        var baseHTML = '<!DOCTYPE html><html><head><meta charset="utf-8"/></head><body style="margin: 0;"></body></html>';
+
+        ifrm.setAttribute('allowfullscreen', '');
+        ifrm.setAttribute('frameborder', '0');
+        ifrm.setAttribute('scrolling', 'no');
+        ifrm.style.display = 'inline-block';
+
+        appendNode.appendChild(ifrm);
+
+        var ifrmDoc = ifrm.contentDocument || ifrm.contentWindow.document;
+
+        ifrmDoc.open();
+        ifrmDoc.write(baseHTML);
+        ifrmDoc.body.appendChild(element);
+        ifrmDoc.close();
+
+        return ifrm;
+    }
+
+    function makeLoadSaltFunction (s) {
+        win["_loadIpromNative"+s] = function (err, data) {
+
+            c = win['crossNativeSettings'][s].config;
+            zh = win['crossNativeSettings'][s].zoneHolder;
+
+
+            if(zh.className.match(/nativeContainer/)) {
+                console.log('duplicate native container', salt);
+                return;
+            }
+
+            zh.className += ' nativeContainer';
+
+            if(data.zoneAds[709].length == 0) {
+                console.log('no native ads');
+                return false;
+            }
+
+            var adUnits = [];
+            var layout = layoutTable[c.dimension];
+            var adUnitSize = calcAdUnitSize(layout);
+            var container = buildContainer(layout);
+            var adUnit;
+
+            data.zoneAds[709].forEach(function (ad, i) {
+                adUnit = renderAdUnit(ad, layout, adUnitSize, i);
+                adUnits.push({
+                    ele: adUnit,
+                    wasVisible: false,
+                    // Parse `logSettings` from the impression link.
+                    logSettings: ad.tracking_links,
+                    impressionLink: ad.logImpression
+                });
+                container.appendChild(adUnit);
+            });
+
+            var fif = wrapWithFIF(zh, container);
+            fif.style.width = layout.width + 'px';
+            fif.style.height = layout.height + 'px';
+            // Init viewability listener for all ad units.
+
+            // Log impresson for each unit.
+            adUnits.forEach(function (unit) {
+                win.document.createElement('img').src = unit.logSettings.i;
+            });
+
+
+        };
+    }
+
+    win._ipromNativeAd = function (win, c, DOMCaret) {
+
+        if(!win['crossNativeSettings']) win['crossNativeSettings'] = {};
+
+        if(typeof win['crossNativeSettings'][salt] != 'undefined') {
+            salt = ipromNS.Utils.randomString(20);
+        }
+
+        makeLoadSaltFunction(salt);
+
+        win['crossNativeSettings'][salt] = {
+            config: c,
+            zoneHolder: DOMCaret
+        };
+
+        if (DOMCaret.children.length == 0 || true) {
+            var parameters = {
+                time: (new Date()).getTime(),
+                sitePath: [c.nativeCallParams.mid],
+                zones: [],
+                callback: "_loadIpromNative"+salt,
+                referer: encodeURIComponent(window.location.href)
+            };
+
+            if (c.nativeCallParams.sid) parameters.sitePath.push(c.nativeCallParams.sid);
+            if (c.nativeCallParams.ssid) parameters.sitePath.push(c.nativeCallParams.ssid);
+
+            for (var i = 0; i < layoutTable[c.dimension].adUnitNum; i++) parameters.zones.push(709);
+
+            parameters.sitePath = JSON.stringify(parameters.sitePath);
+            parameters.zones = JSON.stringify(parameters.zones);
+            parameters.uniqueAds = true;
+
+            var s = document.createElement('script');
+            s.src = "https://core.iprom.net/impression?" + ipromNS.Utils.makeQueryString(parameters);
+            win.document.body.appendChild(s);
+        }
+
+    };
+
+
+})(window);
