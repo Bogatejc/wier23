@@ -7,16 +7,13 @@ WINDOWS = 'windows-1252'
 UTF = 'utf-8'
 
 HTML_TAGS_REGEX = '<.+?>'
-HTML_CLOSING_TAGS_REGEX = '((<\/)\w+(>))'
-HTML_OPENING_TAGS_REGEX = '<[^\/^>]+>'
-HTML_SELF_CLOSING_REGEX = '<\s*([^\s>]+)([^>]*)\/\s*>'
+HTML_CLOSING_TAGS_REGEX = '((<\\/)\\w+(>))'
+HTML_OPENING_TAGS_REGEX = '<[^\\/^>]+>'
+HTML_SELF_CLOSING_REGEX = '<\\s*([^\\s>]+)([^>]*)\\/\\s*>'
+HTML_TAG_CLASS_REGEX = 'class=".+"'
 
 
 def clean_html(html_content):
-    # remove all tag attributes
-    for child in html_content.findChildren():
-        child.attrs.clear()
-
     for script in html_content.select('script'):
         script.extract()
 
@@ -26,8 +23,11 @@ def clean_html(html_content):
     for nav in html_content.select('nav'):
         nav.extract()
 
-    for input in html_content('input'):
-        input.extract()
+    for footer in html_content.select('footer'):
+        footer.extract()
+
+    for input_ in html_content('input'):
+        input_.extract()
 
     for form in html_content('form'):
         form.extract()
@@ -53,18 +53,54 @@ def clean_html(html_content):
 
 def find_closest_equal_opening_tag(tag_name, idx, tags):
     score = 0
+    depth = 0
+
     for i in range(idx, len(tags)):
-        if tag_name == tags[i].group(0):
+
+        if tag_name == tags[i].group(0) and depth == 0:
             return score
+
+        if re.match(HTML_OPENING_TAGS_REGEX, tags[i].group(0)):
+            depth += 1
+
+        elif re.match(HTML_CLOSING_TAGS_REGEX, tags[i].group(0)):
+            depth -= 1
 
         score += 1
 
-    return float('inf')
+    return -float('inf')
 
 
-path_a = '../input-extraction/car1.html'
-path_b = '../input-extraction/car2.html'
+def extract_tag_name(tag):
+    name = tag.group(0)
+    split_ = name.split(' ')
+    if len(split_) > 1:
+        if name.endswith('\\>'):
+            # print(f'{name} : {split_[0]}\\>')
+            return split_[0] + '\\>'
+        elif name.endswith('/>'):
+            # print(f'{name} : {split_[0]}/>')
+            return split_[0] + '/>'
+        else:
+            # print(f'{name} : {split_[0]}>')
+            return split_[0] + '>'
 
+    # print(f'{name} : {split_[0]}')
+    return split_[0]
+
+
+def extract_tag_first_class(tag):
+    classes = re.findall(HTML_TAG_CLASS_REGEX, tag.group(0))
+    if len(classes) > 0:
+        return classes[0].split('"')[1].split(' ')[0]
+
+    return ''
+
+
+path_a = '../input-extraction/testA.html'
+path_b = '../input-extraction/testB.html'
+
+# Remove new lines and comments
 file_a = io.open(path_a, mode='r', encoding=UTF).read().replace('\n', '')
 file_a = re.sub('(<!--.*?-->)', '', file_a, flags=re.DOTALL)
 
@@ -99,8 +135,11 @@ while index_a < len(tags_a) and index_b < len(tags_b):
     tag_a = tags_a[index_a]
     tag_b = tags_b[index_b]
 
-    tag_a_name = tag_a.group(0)
-    tag_b_name = tag_b.group(0)
+    tag_a_name = extract_tag_name(tag_a)
+    tag_b_name = extract_tag_name(tag_b)
+
+    # print(f'{tag_a.group(0)} : {extract_tag_first_class(tag_a)}')
+    # print(f'{tag_b.group(0)} : {extract_tag_first_class(tag_b)}')
 
     # print('Opening')
     # print(re.match(HTML_OPENING_TAGS_REGEX, tag_a))
@@ -117,7 +156,8 @@ while index_a < len(tags_a) and index_b < len(tags_b):
     print('----')
 
     # Tags match
-    if tag_a_name == tag_b_name and len(stack_a) == len(stack_b):
+    if tag_a_name == tag_b_name and\
+            len(stack_a) == len(stack_b):
 
         if re.match(HTML_OPENING_TAGS_REGEX, tag_a_name):
             stack_a.append(tag_a)
@@ -131,8 +171,8 @@ while index_a < len(tags_a) and index_b < len(tags_b):
         print(f'{tag_a_name} : {len(stack_a)}')
         print(f'{tag_b_name} : {len(stack_b)}')
 
-            # print(text_a[start_tag_a.span()[1]: tag_a.span()[0]])
-            # print(text_b[start_tag_b.span()[1]: tag_b.span()[0]])
+        # print(text_a[start_tag_a.span()[1]: tag_a.span()[0]])
+        # print(text_b[start_tag_b.span()[1]: tag_b.span()[0]])
 
     # SELF-CLOSING and SELF-CLOSING
     elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_SELF_CLOSING_REGEX, tag_b_name):
@@ -212,23 +252,30 @@ while index_a < len(tags_a) and index_b < len(tags_b):
         score_a = find_closest_equal_opening_tag(tag_a_name, index_b, tags_b)
         score_b = find_closest_equal_opening_tag(tag_b_name, index_a, tags_a)
 
-        if score_a > score_b:
+        print('Openings')
+        print(f'{tag_a_name} : {len(stack_a)}')
+        print(f'{tag_b_name} : {len(stack_b)}')
+
+        print(f'score_a ({tag_a_name} in tags_b): {score_a}')
+        print(f'score_b ({tag_b_name} in tags_a): {score_b}')
+
+        if score_a < score_b:
 
             closing_depth = len(stack_a)
             closing_tag = '</' + tag_a_name[1:]
 
             stack_a.append(tag_a_name)
-            while tag_a_name != closing_tag and len(stack_a) != closing_depth:
+            while tag_a_name != closing_tag or len(stack_a) != closing_depth:
                 tags_b.insert(index_b, None)
 
-                print(tag_a_name)
-                print(None)
+                print(f'{tag_a_name} : {len(stack_a)}')
+                print(f'None : {len(stack_b)}')
 
                 index_a += 1
                 index_b += 1
 
                 tag_a = tags_a[index_a]
-                tag_a_name = tag_a.group(0)
+                tag_a_name = extract_tag_name(tag_a)
 
                 if re.match(HTML_OPENING_TAGS_REGEX, tag_a_name):
                     stack_a.append(tag_a_name)
@@ -236,8 +283,8 @@ while index_a < len(tags_a) and index_b < len(tags_b):
                 elif re.match(HTML_CLOSING_TAGS_REGEX, tag_a_name):
                     stack_a.pop()
 
-            print(tag_a_name)
-            print(None)
+            print(f'{tag_a_name} : {len(stack_a)}')
+            print(f'None : {len(stack_b)}')
             index_a += 1
 
         else:
@@ -246,17 +293,17 @@ while index_a < len(tags_a) and index_b < len(tags_b):
             closing_tag = '</' + tag_b_name[1:]
 
             stack_b.append(tag_b_name)
-            while tag_b_name != closing_tag and len(stack_b) != closing_depth:
+            while tag_b_name != closing_tag or len(stack_b) != closing_depth:
                 tags_a.insert(index_a, None)
 
-                print(None)
-                print(tag_b_name)
+                print(f'None : {len(stack_a)}')
+                print(f'{tag_b_name} : {len(stack_b)}')
 
                 index_a += 1
                 index_b += 1
 
                 tag_b = tags_b[index_b]
-                tag_b_name = tag_b.group(0)
+                tag_b_name = extract_tag_name(tag_b)
 
                 if re.match(HTML_OPENING_TAGS_REGEX, tag_b_name):
                     stack_b.append(tag_b_name)
@@ -264,8 +311,8 @@ while index_a < len(tags_a) and index_b < len(tags_b):
                 elif re.match(HTML_CLOSING_TAGS_REGEX, tag_b_name):
                     stack_b.pop()
 
-            print(None)
-            print(tag_b_name)
+            print(f'None : {len(stack_a)}')
+            print(f'{tag_b_name} : {len(stack_b)}')
             index_b += 1
 
         continue
