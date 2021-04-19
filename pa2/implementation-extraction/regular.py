@@ -49,47 +49,29 @@ def extract_from_rtvslo(html):
         "content": ""
     }
     html = str(BeautifulSoup(html, 'html.parser'))
-    regex = r'<h1>(.*)</h1>.*\n.*<div class=\"subtitle\">(.*)</div>((.*\n){19})<p class=\"lead\">(.*)</p>((.*\n){4})<div class=\"author-name\">(.*)</div>((.*\n){3})[\s]+(.*)<br/>[\s\S]+</div>(.*)'
-    regex = r'<h1>(.*)</h1>.*\n.*<div class=\"subtitle\">(.*)</div>((.*\n){15})<p class=\"lead\">(.*)</p>((.*\n){4})<div class=\"author-name\">(.*)</div>((.*\n){3})[\s]+(.*)<br/>[\s\S]+</div>(.*)'
-    # regex = r'<h1>(.*)<\/h1>[\s\S]+<div class=\"subtitle\">(.*)<\/div>[\s\S]+<p class=\"lead\">(.*)<\/p>[\s\S]+' \
-    #                 r'<div class=\"author-name\">(.*)<\/div>[\s\S]+\"publish-meta\">[\n\W]+(.*)<br\/>[\s\S]+<\/div>[\n]*' \
-    #                 r'<\/figure>[\n]*<p([\s\S]*.*)<div class=\"gallery\">'
+    regex = r'<h1>(.*)</h1>\n<div class="subtitle">(.*)</div>[\s\S]*<p class="lead">(.*)</p>[\s\S]*<div class="author">[\s\S]*<div class="author-name">(.*)</div>[\s\S]*<div class="publish-meta">\n[\W]*(.*)<br/>[\s\S]*</figure>[\n]*<p(?:[\s\r]+[^>]*)?>(.*)</p>'
 
     for match in re.finditer(regex, html):
 
-        # result['author'] = match.group(8)
-        # result['publishedTime'] = match.group(11)
-        # result['title'] = match.group(1)
-        # result['subtitle'] = match.group(2)
-        # result['lead'] = match.group(5)
-        # result['author'] = match.group(8)
-        # print(match.group(0))
-        print(match.group(1))
-        print(match.group(2))
-        # print(match.group(3))
-        # print(match.group(4))
-        print(match.group(5))
-        # print(match.group(6))
-        # print(match.group(7))
-        print(match.group(8))
-        # # print(match.group(9))
-        # # print(match.group(10))
-        # print(match.group(11))
-        # print(match.group(12))
-        # print(match.group(12))
-        # print(match.group(5))
-        # print(result)
-        print()
+        result['author'] = match.group(4)
+        result['publishedTime'] = match.group(5)
+        result['title'] = match.group(1)
+        result['subtitle'] = match.group(2)
+        result['lead'] = match.group(3)
+        # <[^>]*> tole odstrani še vse ostale html značke, ki so ostale v tekstu
+        result['content'] = re.sub("<[^>]*>", "", match.group(6))
 
     print(result)
     return json.dumps(result)
 
 if __name__ == '__main__':
     html = ""
-    with io.open('../input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
-        html = file.read()
-    extract_from_overstock(html)
-    # with io.open('../input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
-    # with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+    # with io.open('../input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
     #     html = file.read()
-    # extract_from_rtvslo(html)
+    # extract_from_overstock(html)
+    with io.open('../input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+        html = file.read()
+    extract_from_rtvslo(html)
+    with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+        html = file.read()
+    extract_from_rtvslo(html)
