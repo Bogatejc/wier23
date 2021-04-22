@@ -95,8 +95,8 @@ def extract_from_zurnal24(html):
     result['lead'] = lead
     result['content'] = content
 
-    print(result)
-    print()
+    # print(result)
+    # print()
     return json.dumps(result)
 
 if __name__ == '__main__':
@@ -110,9 +110,9 @@ if __name__ == '__main__':
     # with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
     #     html = file.read()
     # extract_from_rtvslo(html)
-    with io.open('../input-extraction/polo.html', mode='r', encoding='utf-8') as file:
-        htmlContent = file.read()
-    extract_from_zurnal24(htmlContent)
-    with io.open('../input-extraction/audi.html', mode='r', encoding='utf-8') as file:
-        htmlContent = file.read()
-    extract_from_zurnal24(htmlContent)
+    # with io.open('../input-extraction/polo.html', mode='r', encoding='utf-8') as file:
+    #     htmlContent = file.read()
+    # extract_from_zurnal24(htmlContent)
+    # with io.open('../input-extraction/audi.html', mode='r', encoding='utf-8') as file:
+    #     htmlContent = file.read()
+    # extract_from_zurnal24(htmlContent)

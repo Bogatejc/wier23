@@ -63,43 +63,37 @@ def extract_from_rtvslo(htmlContent):
 
     return json.dumps(result)
 
-def extract_from_svet_kapitala(htmlContent):
+def extract_from_zurnal24(htmlContent):
     result = {
         "author": "",
         "publishedTime": "",
         "title": "",
-        "subtitle": "",
-        "readingLength": "",
+        "viewCount": "",
+        "lead": "",
         "content": ""
     }
     treeContent = html.fromstring(htmlContent)
-    maindiv = treeContent.xpath('/html/body/div[5]/div[2]/div[2]/div')[0]
-    title = maindiv.xpath('div[1]/h1/text()')[0]
-    subtitle = maindiv.xpath('div[1]/div[1]/text()')[0]
-    author = maindiv.xpath('normalize-space(div[2]/div[2]/div[1]/a/div[2]/text())')
-    publishedTime = maindiv.xpath('normalize-space(div[2]/div[2]/div[1]/div/text()[normalize-space(.)])')
-    readingTimeLength = maindiv.xpath('div[2]/div[2]/div[2]/div[2]/b/text()')[0]
-    readingTimeUnit = maindiv.xpath('div[2]/div[2]/div[2]/div[2]/text()')[1]
-    content = maindiv.xpath('div[3]/div[1]//text()[not(parent::style) and not(parent::script) and not(parent::a) and not(parent::div[contains(@class, "article__image-caption")]) and not(parent::h1)][normalize-space(.)]')
-    # title = treeContent.xpath('/html/body/div[5]/div[2]/div[2]/div/div[1]/h1/text()')[0]
-    # subtitle = treeContent.xpath('/html/body/div[5]/div[2]/div[2]/div/div[1]/div[1]/text()')[0]
-    # author = treeContent.xpath('normalize-space(/html/body/div[5]/div[2]/div[2]/div/div[2]/div[2]/div[1]/a/div[2]/text())')
-    # publishedTime = treeContent.xpath('normalize-space(/html/body/div[5]/div[2]/div[2]/div/div[2]/div[2]/div[1]/div/text()[normalize-space(.)])')
-    # readingTimeLength = treeContent.xpath('/html/body/div[5]/div[2]/div[2]/div/div[2]/div[2]/div[2]/div[2]/b/text()')[0]
-    # readingTimeUnit = treeContent.xpath('/html/body/div[5]/div[2]/div[2]/div/div[2]/div[2]/div[2]/div[2]/text()')[1]
-    # content = treeContent.xpath('/html/body/div[5]/div[2]/div[2]/div/div[3]/div[1]//text()[not(parent::style) and not(parent::script) and not(parent::a) and not(parent::div[contains(@class, "article__image-caption")]) and not(parent::h1)][normalize-space(.)]')
-    content_ = ""
-    for el in content:
-        content_ += el
+    articleHeader = treeContent.xpath('//article/header')[0] 
+    viewCount = articleHeader.xpath('div[1]/span/strong/text()')[0]
+    title = articleHeader.xpath('h1/text()')[0]
+    author = articleHeader.xpath('div[2]/a/text()')[0]
+    publishedTime = articleHeader.xpath('time/text()')[0]
+    lead = treeContent.xpath('//article/div/div[2]/div/div[3]/text()')[0]
+    contentList = treeContent.xpath('//article/div/div[2]/div/div[5]//text()[normalize-space(.)]')
+
+    content = ""
+    for el in contentList:
+        content += el.strip() + " "
 
     result['author'] = author
     result['publishedTime'] = publishedTime
     result['title'] = title
-    result['subtitle'] = subtitle
-    result['readingLength'] = str(readingTimeLength) + "" + str(readingTimeUnit)
-    result['content'] = content_
+    result['viewCount'] = viewCount
+    result['lead'] = lead
+    result['content'] = content
 
     # print(result)
+    # print()
     return json.dumps(result)
 
 
@@ -117,9 +111,9 @@ if __name__ == '__main__':
     # with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
     #     htmlContent = file.read()
     # extract_from_rtvslo(htmlContent)
-    # with io.open('../input-extraction/svetkapitala1.html', mode='r', encoding='utf-8') as file:
+    # with io.open('../input-extraction/polo.html', mode='r', encoding='utf-8') as file:
     #     htmlContent = file.read()
-    # extract_from_svet_kapitala(htmlContent)
-    # with io.open('../input-extraction/svetkapitala2.html', mode='r', encoding='utf-8') as file:
+    # extract_from_zurnal24(htmlContent)
+    # with io.open('../input-extraction/audi.html', mode='r', encoding='utf-8') as file:
     #     htmlContent = file.read()
-    # extract_from_svet_kapitala(htmlContent)
+    # extract_from_zurnal24(htmlContent)
