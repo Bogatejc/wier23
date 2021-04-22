@@ -64,6 +64,41 @@ def extract_from_rtvslo(html):
     # print(result)
     return json.dumps(result)
 
+def extract_from_zurnal24(html):
+    result = {
+        "author": "",
+        "publishedTime": "",
+        "title": "",
+        "viewCount": "",
+        "lead": "",
+        "content": ""
+    }
+
+    html = str(BeautifulSoup(html, 'html.parser'))
+    # ([\n]*(<p(?:[\s\r]+[^>]*)?>(.*)</p>|<div(?:[\s\r]+[^>]*)?>[\n]*.*[\n]*</div>)*[\n]*)*[\s\S]*
+    regex = r'<span class="article__views">[\n]*<i.*>.*</i>[\n]*<strong>(.*)</strong>[\s\S]*<h1 class="article__title">(.*)</h1>[\n]*<div class="article__authors">[\s\S]*<a href=.*>(.*)</a>[\n]*</div>[\n]*<time class="article__time">(.*)</time>[\s\S]*<div class="article__leadtext">[\n]*(.*)[\n]*</div>[\s\S]*<div class="article__content no_page_break cf" .*>\n([\s\S]*)</div>[\n]*<div class="text-center fold_article__bellow_content">'
+
+    for match in re.finditer(regex, html):
+        # print(match.group(0))
+        viewCount = match.group(1) # view count
+        title = match.group(2) # title
+        author = match.group(3) # author
+        publishedTime = match.group(4) # published time
+        lead = match.group(5) # lead
+        fullContent = match.group(6)
+        content = re.sub("<[^>]*>|\n", "", fullContent)
+
+    result['author'] = author
+    result['publishedTime'] = publishedTime
+    result['title'] = title
+    result['viewCount'] = viewCount
+    result['lead'] = lead
+    result['content'] = content
+
+    print(result)
+    print()
+    return json.dumps(result)
+
 if __name__ == '__main__':
     html = ""
     # with io.open('../input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
@@ -75,3 +110,9 @@ if __name__ == '__main__':
     # with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
     #     html = file.read()
     # extract_from_rtvslo(html)
+    with io.open('../input-extraction/polo.html', mode='r', encoding='utf-8') as file:
+        htmlContent = file.read()
+    extract_from_zurnal24(htmlContent)
+    with io.open('../input-extraction/audi.html', mode='r', encoding='utf-8') as file:
+        htmlContent = file.read()
+    extract_from_zurnal24(htmlContent)

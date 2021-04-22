@@ -1,0 +1,39 @@
+#dfp_mainContainer {
+  position: relative;
+  width: 786px;
+  height: 482px;
+}
+
+#dfp_content, #dfp_adContainer {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 786px;
+  height: 482px;
+}
+
+#dfp_contentElement {
+  width: 786px;
+  height: 482px;
+  overflow: hidden;
+  background: rgba(0,0,0,0.0);
+}
+
+#dfp_playButton {
+  margin-top:10px;
+  vertical-align: top;
+  width: 350px;
+  height: 60px;
+  padding: 0;
+  font-size: 22px;
+  color: white;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  background: #2c3e50;
+  border: 0;
+  border-bottom: 2px solid #22303f;
+  cursor: pointer;
+  -webkit-box-shadow: inset 0 -2px #22303f;
+  box-shadow: inset 0 -2px #22303f;
+  float: left;
+}

@@ -99,7 +99,7 @@ def extract_from_svet_kapitala(htmlContent):
     result['readingLength'] = str(readingTimeLength) + "" + str(readingTimeUnit)
     result['content'] = content_
 
-    print(result)
+    # print(result)
     return json.dumps(result)
 
 
@@ -117,9 +117,9 @@ if __name__ == '__main__':
     # with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
     #     htmlContent = file.read()
     # extract_from_rtvslo(htmlContent)
-    with io.open('../input-extraction/svetkapitala1.html', mode='r', encoding='utf-8') as file:
-        htmlContent = file.read()
-    extract_from_svet_kapitala(htmlContent)
-    with io.open('../input-extraction/svetkapitala2.html', mode='r', encoding='utf-8') as file:
-        htmlContent = file.read()
-    extract_from_svet_kapitala(htmlContent)
+    # with io.open('../input-extraction/svetkapitala1.html', mode='r', encoding='utf-8') as file:
+    #     htmlContent = file.read()
+    # extract_from_svet_kapitala(htmlContent)
+    # with io.open('../input-extraction/svetkapitala2.html', mode='r', encoding='utf-8') as file:
+    #     htmlContent = file.read()
+    # extract_from_svet_kapitala(htmlContent)

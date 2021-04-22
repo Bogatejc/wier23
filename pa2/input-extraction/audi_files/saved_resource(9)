@@ -1,0 +1,474 @@
+
+    (function(id) {
+        if (document.getElementById(id)) return;
+        var pbjsEl = document.createElement('script'); pbjsEl.type = 'text/javascript'; pbjsEl.id = id;
+        pbjsEl.async = true; var isHttps = 'https:' === document.location.protocol;
+        pbjsEl.src = '//projectagora.net/libs/prebidv3/prebid.js';
+        var pbjsTargetEl = document.getElementsByTagName('head')[0];
+        pbjsTargetEl.insertBefore(pbjsEl, pbjsTargetEl.firstChild);
+    })('prebid');
+
+    (function(paAdTagId){
+        var qS,
+            referrerUrl,
+            partnerSchain,
+            adServerUrl = 'ads.projectagoraservices.com',
+            adTagClass = 'pa-adtag',
+            adTagId = paAdTagId || null;
+
+        var scoConfig = null;
+        var sco = {"pa_seller_id":"103021","pa_owns":"Owned & Operated"};
+
+ 
+        function getPlacementScriptElement(){
+            if (document.currentScript)
+                return document.currentScript;
+            else {
+                
+                if (!adTagId) return null;
+                var scripts = document.getElementsByTagName('script');
+                var currentAdTag = adServerUrl + '/?id=' + adTagId; 
+                var sl = scripts.length;
+                for (var s=0; s<sl; s++){
+                    if ( (scripts[s].src.indexOf(currentAdTag) !== -1) && !scripts[s].classList.contains(adTagClass)){
+                        scripts[s].classList.add(adTagClass);
+                        break;
+                    }
+                }
+
+                return scripts[s];
+            }
+        }
+
+        function getQueryString(script){
+            var queryString = script.src.replace(/^[^\?]+\??/,'');
+            return '?'+queryString;
+        }
+
+        function getParameterByName(name, url) {
+            if (!url) url = window.location.href;
+            name = name.replace(/[\[\]]/g, '\$&');
+            var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+                results = regex.exec(url);
+            if (!results) return null;
+            if (!results[2]) return '';
+            try {
+                return decodeURIComponent(results[2].replace(/\+/g, ' '));
+            }catch(err){
+                return null;
+            }
+        }
+
+        function getPAOwns(){
+            if (sco !== null){
+                if (sco.hasOwnProperty('pa_owns') && sco.hasOwnProperty('pa_seller_id')) return sco['pa_owns'];
+                return null;
+            }else {
+                return null;
+            }
+        }
+
+        function getPASCONode(){
+            var sid = (sco && sco.hasOwnProperty('pa_seller_id') && sco['pa_seller_id']) ? sco['pa_seller_id'] : 100000;
+            
+            return {
+                "asi": "projectagora.com",
+                "sid": sid.toString(),
+                "hp": 1
+            }
+            
+        }
+
+        function isValidFloat(str) {
+            return (/^-?[\d]*(\.[\d]+)$/g).test(str);
+        }
+        
+        function parsePartnerSchain(partnerSco) {
+            
+            if (partnerSco === null) return false;
+
+            var sco = {};
+            var partnerScoSeparator = partnerSco.split('!');
+            if (partnerScoSeparator.length <=1) return false;
+        
+            var scoInfo = partnerScoSeparator[0].split(',');
+            if ( scoInfo[0] === '' || !isValidFloat(scoInfo[0])) return false;
+            sco['version'] = scoInfo[0];
+                
+            if ( ['1','0'].indexOf(scoInfo[1]) === -1 ) return false;
+            sco['complete'] = parseInt(scoInfo[1]);
+        
+            sco['partners'] = [];
+            var partnerSeparatedLength = partnerScoSeparator.length;
+            
+            for (var i = 1; i<partnerSeparatedLength; i++) {
+                var partnerComponents = partnerScoSeparator[i].split(',');
+                var partner = getPartnerSco(partnerComponents);
+                if (partner === false){
+                    return false;
+                }else {
+                    sco['partners'].push(partner);
+                }
+            }
+
+            return sco;
+        }
+        
+        function getPartnerSco(parsedPartnerSco){
+            if (parsedPartnerSco.length < 3){
+                return false;
+            }
+            
+            var sco = {
+              asi: null,
+              sid: null,
+              hp: null
+            }
+            
+            var domainRegExp = new RegExp('^((?!:\/\/)([a-zA-Z0-9-_]+\.)*[a-zA-Z0-9][a-zA-Z0-9-_]+\.[a-zA-Z]{2,11}?)$');
+            
+            
+            // check asi
+            if ( !domainRegExp.test(parsedPartnerSco[0]) ) return false;
+            sco['asi'] = parsedPartnerSco[0];
+            
+            // check sid if not empty
+            if (parsedPartnerSco[1].trim().length === 0) return false;
+            sco['sid'] = decodeURIComponent(parsedPartnerSco[1]);
+            
+            // check hp
+            if (parsedPartnerSco[2] !== '1') return false;
+            sco['hp'] = parseInt(parsedPartnerSco[2]);
+        
+            // check rid
+            if ( parsedPartnerSco[3] && parsedPartnerSco[3] !== '' ) {
+                sco['rid'] = decodeURIComponent(parsedPartnerSco[3])
+            }
+          
+            //check name
+            if ( parsedPartnerSco[4] && parsedPartnerSco[4] !== '') {
+                sco['name'] = decodeURIComponent(parsedPartnerSco[4]);
+            }
+        
+            //check domain
+            if (parsedPartnerSco[5] && parsedPartnerSco[5] !== '') {
+                sco['domain'] = decodeURIComponent(parsedPartnerSco[5]);
+            }
+        
+            //check ext
+            if (parsedPartnerSco[6] && parsedPartnerSco[6] !== '' ){
+                sco['ext'] = parsedPartnerSco[6];
+            }
+        
+            return sco;
+            
+        }
+
+
+        function getSCOConfig(qS){
+            
+            var config = {}
+            var paNode = null;
+            var partnerNode = null;
+            var partnerSchainStr = null;
+            var partnerSchainObj = null;
+            
+            var nodes = [];
+            
+            config['ver'] = "1.0";
+
+            // try to get partner input schain
+            partnerSchainStr = getParameterByName('schain', qS);
+            if (partnerSchainStr === ''){
+                partnerSchainStr = null;
+            }
+
+            // build nodes & complete
+            var paOwns = getPAOwns();
+
+            if ( (paOwns === null && partnerSchainStr === null) || (paOwns !== null && paOwns === 'Owned & Operated')) {
+                
+                nodes.push(getPASCONode());
+                config['complete'] = 1
+
+            }else if ((paOwns === null && partnerSchainStr !== null) || (paOwns !== null && paOwns === 'Operated Only') ){
+                partnerSco = parsePartnerSchain(partnerSchainStr);
+
+                if (partnerSco === false){
+                    
+                    nodes.push(getPASCONode());
+                    config['complete'] = 0
+
+                }else{
+                    nodes = nodes.concat(partnerSco['partners']);
+                    nodes.push(getPASCONode());
+                    config['complete'] = partnerSco['complete'];
+                }
+            }
+
+            config['nodes'] = nodes;
+
+            return config;
+
+        }
+
+        function findCMP() {
+            var f = window;
+            var cmpFrame;
+            var cmpFunction;
+            var cmpVersion = 0;
+            while (!cmpFrame) {
+              try {
+                if (typeof f.__tcfapi === 'function' || typeof f.__cmp === 'function') {
+                  if (typeof f.__tcfapi === 'function') {
+                    cmpVersion = 2;
+                    cmpFunction = f.__tcfapi;
+                  } else {
+                    cmpVersion = 1;
+                    cmpFunction = f.__cmp;
+                  }
+                  cmpFrame = f;
+                  break;
+                }
+              } catch (e) { }
+        
+              // need separate try/catch blocks due to the exception errors thrown when trying to check for a frame that doesn't exist in 3rd party env
+              try {
+                if (f.frames['__tcfapiLocator']) {
+                  cmpVersion = 2;
+                  cmpFrame = f;
+                  break;
+                }
+              } catch (e) { }
+        
+              try {
+                if (f.frames['__cmpLocator']) {
+                  cmpVersion = 1;
+                  cmpFrame = f;
+                  break;
+                }
+              } catch (e) { }
+        
+              if (f === window.top) break;
+              f = f.parent;
+            }
+            return {
+              cmpFrame,
+              cmpFunction,
+              cmpVersion
+            };
+        }
+        
+        
+        var plmntScriptElement = getPlacementScriptElement();
+        if (plmntScriptElement){
+            qS = getQueryString(plmntScriptElement);
+            if (qS){
+                referrerUrl = getParameterByName('uref',qS);
+                adTagId = getParameterByName('id',qS);
+                if (referrerUrl)
+                    referrerUrl = referrerUrl.replace(/'/g, '');
+                
+                scoConfig = getSCOConfig(qS);
+                    
+            }
+        }
+
+        
+        
+        var _id = new Date().getTime();
+        var _placementFrmId = 'postbid_if_' + _id;
+
+        var adUnitSizes = [[970,250]];
+
+        var adUnitBids = [
+            {
+            bidder: 'appnexus',
+            params: {
+                usePaymentRule: true,
+                placementId:'17467436'
+            }
+        },{
+            bidder: 'criteo',
+            params: {
+                zoneId:'1367047',
+                publisherSubId: '17467436'
+            }
+        },{
+            bidder: 'pubmatic',
+            params: {
+                publisherId: '156400',
+                adSlot: '2458229@970x250'
+            }
+        },{
+            bidder: 'smartadserver',
+            params: {
+                domain: 'https://prg.smartadserver.com',
+                siteId: '329204',
+                pageId:'1160087',
+                formatId:'49091'
+            }
+        },{
+            bidder: 'adform',
+            params: {
+                mid:'739882'
+            }
+        },{
+            bidder: 'openx',
+            params: {
+                unit: '541068304',
+                delDomain:'projectagora-d.openx.net'
+            }
+        },{
+            bidder: 'triplelift',
+            params: {
+                inventoryCode:'17467436_ProjectAgora_zurnal24si_ros_970x250_HDX'
+            }
+        }
+        ]
+
+        var passbackTagHtml = "<script type=\"text\/javascript\"><!--\r\n        google_ad_client = \"ca-pub-2500372977609723\";\r\n        \/* 17467436_zurnal24.si_ros_970x250 *\/\r\n        google_ad_slot = \"PA_GR_FeniksMediaDoo\/zurnal24.si\/17467436_zurnal24.si_ros_970x250\";\r\n        google_ad_width = 970;\r\n        google_ad_height = 250;\r\n        \/\/-->\r\n        <\/script>\r\n        <script type=\"text\/javascript\"\r\n        src=\"\/\/pagead2.googlesyndication.com\/pagead\/show_ads.js\">\r\n        <\/script>\r\n        ";
+        var adxPsbk = {
+            'type': "no_psbk",
+            'data': null,
+            'frame_id': _placementFrmId,
+            'adTag_id':adTagId
+        }
+
+        if (adxPsbk && adxPsbk.type !== 'no_psbk'){
+            var adxPsbk = '<script> var adxPsbk ='+JSON.stringify(adxPsbk)+'<\/script>'
+            var helper_lib = '<script src="https:\/\/projectagoralibs.com\/libs\/pa_backupads_lib.js"><\/script>'
+
+            passbackTagHtml = adxPsbk + helper_lib + passbackTagHtml; 
+        }
+       
+        function getPlacementFrameId (){
+            return _placementFrmId;
+        }
+        
+        function createPlacmentIframe(id){
+            var frmEl = document.createElement('iframe');
+            frmEl.setAttribute('id', getPlacementFrameId());
+            frmEl.frameBorder = '0';
+            frmEl.scrolling = 'no';
+            frmEl.marginWidth = '0';
+            frmEl.marginHeight = '0';
+            frmEl.TOPMARGIN = '0';
+            frmEl.LEFTMARGIN = '0';
+            frmEl.ALLOWTRANSPARENCY = 'true';
+            frmEl.width = '0';
+            frmEl.height = '0';
+
+            return frmEl;
+            
+        }
+
+        var plmntFrame = createPlacmentIframe();
+        
+        if (plmntScriptElement){
+            plmntScriptElement.parentNode.insertBefore(plmntFrame, plmntScriptElement);
+        }else {
+            return 0;
+        }
+
+        window.projectAgoraPbjs = window.projectAgoraPbjs || {};
+        projectAgoraPbjs.que = projectAgoraPbjs.que || [];
+
+        var adUnitCodeName = '17467436_zurnal24.si_ros_970x250';
+
+        projectAgoraPbjs.que.push(function() {
+
+            var adUnits = [{
+                code: adUnitCodeName,
+                mediaTypes: {
+                    banner: {
+                        sizes: adUnitSizes
+                    }
+                },
+                bids: adUnitBids
+            }];
+
+            var {cmpFrame, cmpFunction, cmpVersion} = findCMP();
+ 
+            if (cmpFrame) {
+                if (cmpVersion === 1) {
+                    projectAgoraPbjs.setConfig({
+                        consentManagement: {gdpr: {  cmpApi: 'iab',  timeout: 8000,  allowAuctionWithoutConsent: true}  }
+                    });
+                }else if (cmpVersion === 2){
+                    projectAgoraPbjs.setConfig({
+                        consentManagement: {gdpr: {  cmpApi: 'iab',  timeout: 8000,  defaultGdprScope: true}  }
+                    });
+                }
+                
+            }
+
+            projectAgoraPbjs.setConfig({
+                "schain": {
+                    "validation": "strict",
+                    "config": {
+                    "ver":scoConfig['ver'],
+                    "complete":scoConfig['complete'] ,
+                    "nodes": scoConfig['nodes']
+                    }
+                }
+            });
+            
+            projectAgoraPbjs.enableAnalytics({
+                provider: 'adomik',
+                options: {
+                    id: 'projectagora-483829',
+                    url: 'projectagora-483829-hdb.adomik.com'
+                }
+            });
+
+            var existing = projectAgoraPbjs.adUnits.filter(function(adunit){ return adunit.code == adUnitCodeName})
+            if (existing.length == 1) {
+                projectAgoraPbjs.removeAdUnit(adUnitCodeName)
+            }
+
+            projectAgoraPbjs.addAdUnits(adUnits);
+    
+            projectAgoraPbjs.requestBids({
+                adUnitCodes: [adUnitCodeName],
+                timeout: 2000,
+                bidsBackHandler: function() {
+                    var iframe = document.getElementById(getPlacementFrameId());
+                    
+                    var iframeDoc = iframe.contentWindow.document;
+    
+                    var params = projectAgoraPbjs.getAdserverTargetingForAdUnitCode(adUnitCodeName);
+                    var msg = {
+                        id: adTagId
+                    };
+    
+                    if(params && params['hb_adid']){
+                        
+                        msg['adTagHB'] = true; 
+                        window.postMessage(JSON.stringify(msg),"*");
+                        projectAgoraPbjs.renderAd(iframeDoc, params['hb_adid']);
+            
+                    } else {
+                        
+                        if (passbackTagHtml) {
+                            msg['adTagPassback'] = true;
+                            window.postMessage(JSON.stringify(msg),"*");
+                            
+                            iframe.width = adUnitSizes[0][0];
+                            iframe.height = adUnitSizes[0][1];
+        
+                            iframeDoc.write(passbackTagHtml);
+                            iframeDoc.close();
+
+                        }else {
+                            if (iframe){
+                                iframe.parentNode.removeChild(iframe);
+                            }
+                        }
+                        
+                    }
+                }
+            });
+        });
+
+    })('5597');
