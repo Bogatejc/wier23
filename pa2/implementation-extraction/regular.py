@@ -61,7 +61,7 @@ def extract_from_rtvslo(html):
         # <[^>]*> tole odstrani še vse ostale html značke, ki so ostale v tekstu
         result['content'] = re.sub("<[^>]*>", "", match.group(6))
 
-    print(result)
+    # print(result)
     return json.dumps(result)
 
 if __name__ == '__main__':
@@ -69,9 +69,9 @@ if __name__ == '__main__':
     # with io.open('../input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
     #     html = file.read()
     # extract_from_overstock(html)
-    with io.open('../input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
-        html = file.read()
-    extract_from_rtvslo(html)
-    with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
-        html = file.read()
-    extract_from_rtvslo(html)
+    # with io.open('../input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+    #     html = file.read()
+    # extract_from_rtvslo(html)
+    # with io.open('../input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+    #     html = file.read()
+    # extract_from_rtvslo(html)
