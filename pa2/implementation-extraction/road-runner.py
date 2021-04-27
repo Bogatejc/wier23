@@ -1,5 +1,6 @@
 import io
 import re
+from typing import List
 
 from bs4 import BeautifulSoup
 
@@ -44,11 +45,11 @@ def clean_html(html_content):
     for button in html_content('button'):
         button.extract()
 
-    # for svg in html_content('svg'):
-    #     svg.extract()
-    # 
-    # for figure in html_content('figure'):
-    #     figure.extract()
+    for svg in html_content('svg'):
+        svg.extract()
+
+    for figure in html_content('figure'):
+        figure.extract()
 
     for br in html_content.findAll('br'):
         br.extract()
@@ -176,6 +177,9 @@ def count_same_tags(tag_name, idx_a, idx_b, tags_a_, tags_b_):
 
 
 def extract_tag_name(tag):
+    if tag is None:
+        return None
+
     name = tag.group(0)
     split_ = name.split(' ')
     if len(split_) > 1:
@@ -197,8 +201,8 @@ def extract_tag_first_class(tag):
     return ''
 
 
-path_a = '../input-extraction/audi.html'
-path_b = '../input-extraction/polo.html'
+path_a = '../input-extraction/car1.html'
+path_b = '../input-extraction/car2.html'
 gamma = 2.0
 
 # Remove new lines and comments
@@ -216,8 +220,6 @@ clean_html(html_b)
 
 body_a = html_a.find('body')
 body_b = html_b.find('body')
-
-regular_expression = '<HTML>'
 
 text_a = body_a.__str__()
 text_b = body_b.__str__()
@@ -396,19 +398,179 @@ while index_a < len(tags_a) and index_b < len(tags_b):
     index_a += 1
     index_b += 1
 
-# for tag_a, tag_b in zip(tags_a, tags_b):
-# 
-#     if tag_a is not None:
-#         print(extract_tag_name(tag_a), end=' \t')
-#     else:
-#         print('None', end=' \t')
-# 
-#     if tag_b is not None:
-#         print(extract_tag_name(tag_b), end=' \t')
-#     else:
-#         print('None', end=' \t')
-# 
-#     print()
+print('-----------------------------------------------------')
 
 print(f'{counter_same} : {len(tags_a)} ({counter_same * 100 / len(tags_a):.2f} %)')
-print('DONE')
+
+print('-----------------------------------------------------')
+
+
+class Tag(object):
+
+    def __new__(cls, tag_start, tag_end, text):
+        if tag_start is not None:
+            instance = super(Tag, cls).__new__(cls)
+            instance.name = extract_tag_name(tag_start).upper()
+            instance.indent = 0
+            instance.quantity = ''
+            instance.start = tag_start.regs[0][1]
+            instance.word = ' '
+            instance.placeholder = ' '
+
+            if tag_end is not None:
+                instance.end = tag_end.regs[0][0]
+                tmp = text[instance.start:instance.end].strip()
+                if not tmp.isspace() and tmp != '':
+                    instance.word = tmp
+            else:
+                instance.end = None
+
+            return instance
+
+        return None
+
+    def __eq__(self, other):
+        return self.name == other.name
+
+    def __is_closing__(self, other):
+        closing_tag_front = other.name[0] + '/' + other.name[1:]
+        closing_tag_back = other.name[:-1] + '/' + other.name[-1]
+
+        return self.name == closing_tag_back or self.name == closing_tag_front
+
+
+tags_a.append(None)
+tags_b.append(None)
+
+indentation = 0
+tags = []
+
+
+def create_re(tags_list: List[Tag]):
+    r_e = '<HTML>\n'
+    for tag in tags_list:
+        r_e += tag.indent * '\t' + tag.name + ' ' + tag.quantity + '\n'
+        if not tag.placeholder.isspace() and tag.placeholder != '':
+            r_e += (tag.indent + 1) * '\t' + tag.placeholder + '\n'
+
+    return r_e + '</HTML>'
+
+
+def check_if_closing(tag_opening, tag_closing):
+    tag_opening = tag_opening.upper()
+    tag_closing = tag_closing.upper()
+
+    closing_tag_front = tag_opening[0] + '/' + tag_opening[1:]
+    closing_tag_back = tag_opening[:-1] + '/' + tag_opening[-1]
+
+    return tag_closing == closing_tag_back or tag_closing == closing_tag_front
+
+
+def find_previous_index(tag_name, tags_list: List[Tag]):
+    tag_name = tag_name.upper()
+    return list(map(lambda x: x.name, tags_list[::-1])).index(tag_name)
+
+
+def check_if_match(tag_name_a, tag_name_b, idx_a, idx_b, tags_list_a, tags_list_b, tags_list: List[Tag], opt):
+    if not opt:
+        prev_index = find_previous_index(tag_name_a, tags_list)
+
+    elif tag_name_a is not None:
+        prev_index = find_previous_index(tag_name_a, tags_list)
+
+    else:
+        prev_index = find_previous_index(tag_name_b, tags_list)
+
+
+def save_tag(tag: Tag, ind, is_opt):
+    if re.match(HTML_OPENING_TAGS_REGEX, tag.name):
+        ind += 1
+        tag.indent = ind
+        if not is_opt:
+            tags.append(tag)
+        else:
+            tag.quantity = 'optional'
+            tags.append(tag)
+
+    elif re.match(HTML_CLOSING_TAGS_REGEX, tag.name):
+        tag.indent = ind
+        if not is_opt:
+            tags.append(tag)
+        else:
+            tag.quantity = 'optional'
+            tags.append(tag)
+        ind -= 1
+
+    elif re.match(HTML_SELF_CLOSING_REGEX, tag.name):
+        ind += 1
+        if not is_opt:
+            tag.indent = ind
+            tags.append(tag)
+        else:
+            if tags[-1].name == tag.name:
+                tags[-1].quantity = 'multiple optional'
+            else:
+                tag.indent = ind
+                tag.quantity = 'optional'
+                tags.append(tag)
+        ind -= 1
+
+    return ind
+
+
+index_a = 0
+index_b = 0
+
+while index_a != len(tags_a) - 1 and index_b != len(tags_b) - 1:
+
+    tag_a_start = Tag(tags_a[index_a], tags_a[index_a + 1], text_a)
+    tag_b_start = Tag(tags_b[index_b], tags_b[index_b + 1], text_b)
+
+    if tag_a_start is not None and tag_b_start is not None and tag_a_start.__eq__(tag_b_start):
+
+        if len(tags) > 0 and tag_a_start.__is_closing__(tags[-1]) and False:
+            prev_index = find_previous_index("", tags)
+
+        else:
+            if tag_a_start.word == tag_b_start.word:
+                tag_a_start.placeholder = tag_a_start.word
+                tag_b_start.placeholder = tag_b_start.word
+            else:
+                tag_a_start.placeholder = '#WORD'
+                tag_b_start.placeholder = '#WORD'
+
+            indentation = save_tag(tag_a_start, indentation, False)
+
+    elif tag_a_start is not None:
+
+        if len(tags) > 0 and tag_a_start.__is_closing__(tags[-1]) and False:
+            prev_index = find_previous_index("", tags)
+
+        else:
+            tag_a_start.placeholder = tag_a_start.word
+
+            indentation = save_tag(tag_a_start, indentation, True)
+
+    elif tag_b_start is not None:
+
+        if len(tags) > 0 and tag_b_start.__is_closing__(tags[-1]) and False:
+            prev_index = find_previous_index("", tags)
+
+        else:
+            tag_b_start.placeholder = tag_b_start.word
+
+            indentation = save_tag(tag_b_start, indentation, True)
+
+    else:
+        print('ERROR: Both tags are None.')
+
+    index_a += 1
+    index_b += 1
+
+print(create_re(tags))
+
+print('-----------------------------------------------------')
+
+print(f'{counter_same} : {len(tags_a)} ({counter_same * 100 / len(tags_a):.2f} %)')
+
+print('-----------------------------------------------------')
