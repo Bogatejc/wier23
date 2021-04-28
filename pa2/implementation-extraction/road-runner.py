@@ -307,7 +307,16 @@ def save_tag(tag: Tag, ind, is_opt, tags):
     return ind
 
 
-def road_runner(path_a, path_b, encoding):
+def road_runner(path_a, path_b, encoding, shouldPrint=False):
+    """
+    Runs the road runner algorithm and prints the result to stdout.
+    :param path_a: Path to the first file
+    :param path_b: Path to the second file
+    :param encoding: Encoding that will be used for reading the file
+    :param shouldPrint: Set to true if you want to print additional information. Default value is False.
+    :return: None.
+    """
+
     gamma = 2.0
 
     # Remove new lines and comments
@@ -371,60 +380,60 @@ def road_runner(path_a, path_b, encoding):
                 start_tag_a = stack_a.pop()
                 start_tag_b = stack_b.pop()
 
-            print(
+            if shouldPrint: print(
                 f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5} * {opening_a_size:>4} {opening_b_size:>4}')
             counter_same += 1
 
-            # print(text_a[start_tag_a.span()[1]: tag_a.span()[0]])
-            # print(text_b[start_tag_b.span()[1]: tag_b.span()[0]])
-
         # SELF-CLOSING and SELF-CLOSING
         elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_SELF_CLOSING_REGEX, tag_b_name):
-            print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(
+                f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
         # SELF-CLOSING and OPENING
         elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_OPENING_TAGS_REGEX, tag_b_name):
             tags_b.insert(index_b, None)
-            print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
 
         # OPENING and SELF-CLOSING
         elif re.match(HTML_OPENING_TAGS_REGEX, tag_a_name) and re.match(HTML_SELF_CLOSING_REGEX, tag_b_name):
             tags_a.insert(index_a, None)
-            print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
         # SELF-CLOSING and CLOSING
         elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_CLOSING_TAGS_REGEX, tag_b_name):
             tags_b.insert(index_b, None)
-            print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
 
         # CLOSING and SELF-CLOSING
         elif re.match(HTML_CLOSING_TAGS_REGEX, tag_a_name) and re.match(HTML_SELF_CLOSING_REGEX, tag_b_name):
             tags_a.insert(index_a, None)
-            print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
         # OPENING and CLOSING
         elif re.match(HTML_OPENING_TAGS_REGEX, tag_a_name) and re.match(HTML_CLOSING_TAGS_REGEX, tag_b_name):
             tags_b.insert(index_b, None)
             stack_a.append(tag_a)
-            print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
 
         # CLOSING and OPENING
         elif re.match(HTML_CLOSING_TAGS_REGEX, tag_a_name) and re.match(HTML_OPENING_TAGS_REGEX, tag_b_name):
             tags_a.insert(index_a, None)
             stack_b.append(tag_b)
-            print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
         # CLOSING and CLOSING
         elif re.match(HTML_CLOSING_TAGS_REGEX, tag_a_name) and re.match(HTML_CLOSING_TAGS_REGEX, tag_b_name):
             if len(stack_a) > len(stack_b):
                 start_tag_a = stack_a.pop()
                 tags_b.insert(index_b, None)
-                print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+                if shouldPrint: print(
+                    f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
 
             else:
                 start_tag_b = stack_b.pop()
                 tags_a.insert(index_a, None)
-                print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+                if shouldPrint: print(
+                    f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
         # OPENING and OPENING
         elif re.match(HTML_OPENING_TAGS_REGEX, tag_a_name) and re.match(HTML_OPENING_TAGS_REGEX, tag_b_name):
@@ -446,7 +455,8 @@ def road_runner(path_a, path_b, encoding):
                 while tag_a_name != closing_tag or len(stack_a) != closing_depth:
                     tags_b.insert(index_b, None)
 
-                    print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+                    if shouldPrint: print(
+                        f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
 
                     index_a += 1
                     index_b += 1
@@ -461,7 +471,8 @@ def road_runner(path_a, path_b, encoding):
                         stack_a.pop()
 
                 tags_b.insert(index_b, None)
-                print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+                if shouldPrint: print(
+                    f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
 
                 index_a += 1
                 index_b += 1
@@ -475,7 +486,8 @@ def road_runner(path_a, path_b, encoding):
                 while tag_b_name != closing_tag or len(stack_b) != closing_depth:
                     tags_a.insert(index_a, None)
 
-                    print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+                    if shouldPrint: print(
+                        f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
                     index_a += 1
                     index_b += 1
@@ -490,7 +502,8 @@ def road_runner(path_a, path_b, encoding):
                         stack_b.pop()
 
                 tags_a.insert(index_a, None)
-                print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+                if shouldPrint: print(
+                    f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
 
                 index_a += 1
                 index_b += 1
@@ -498,16 +511,11 @@ def road_runner(path_a, path_b, encoding):
             continue
 
         else:
-            print("ERROR: Tags don't match with any criterion.")
+            if shouldPrint: print("ERROR: Tags don't match with any criterion.")
+            pass
 
         index_a += 1
         index_b += 1
-
-    print('-----------------------------------------------------')
-
-    print(f'{counter_same} : {len(tags_a)} ({counter_same * 100 / len(tags_a):.2f} %)')
-
-    print('-----------------------------------------------------')
 
     tags_a.append(None)
     tags_b.append(None)
@@ -559,7 +567,7 @@ def road_runner(path_a, path_b, encoding):
                 indentation = save_tag(tag_b_start, indentation, True, tags)
 
         else:
-            print('ERROR: Both tags are None.')
+            if shouldPrint: print('ERROR: Both tags are None.')
             pass
 
         index_a += 1
@@ -567,12 +575,12 @@ def road_runner(path_a, path_b, encoding):
 
     print(create_re(tags))
 
-    print('-----------------------------------------------------')
+    if shouldPrint: print('-----------------------------------------------------')
 
-    print(f'{counter_same} : {len(tags_a)} ({counter_same * 100 / len(tags_a):.2f} %)')
+    if shouldPrint: print(f'{counter_same} : {len(tags_a)} ({counter_same * 100 / len(tags_a):.2f} %)')
 
-    print('-----------------------------------------------------')
+    if shouldPrint: print('-----------------------------------------------------')
 
 
 if __name__ == '__main__':
-    road_runner('../input-extraction/testA.html', '../input-extraction/testB.html', UTF)
+    road_runner('../input-extraction/testA.html', '../input-extraction/testB.html', UTF, True)
