@@ -51,7 +51,7 @@ def extract_from_rtvslo(htmlContent):
     contentList = treeContent.xpath('//*[@id="main-container"]/div[3]/div/div[2]/article/p/text() | //*[@id="main-container"]/div[3]/div/div[2]/article//strong/text()')
     content = ""
     for el in contentList:
-        print(el)
+        # print(el)
         content += el + " "
 
     result['author'] = author
@@ -97,8 +97,8 @@ def extract_from_zurnal24(htmlContent):
     return json.dumps(result)
 
 
-if __name__ == '__main__':
-    htmlContent = ""
+# if __name__ == '__main__':
+#     htmlContent = ""
     # with io.open('../input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
     #     htmlContent = file.read()
     # extract_from_overstock(htmlContent)

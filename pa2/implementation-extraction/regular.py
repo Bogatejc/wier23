@@ -99,8 +99,8 @@ def extract_from_zurnal24(html):
     # print()
     return json.dumps(result)
 
-if __name__ == '__main__':
-    html = ""
+# if __name__ == '__main__':
+#     html = ""
     # with io.open('../input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
     #     html = file.read()
     # extract_from_overstock(html)
