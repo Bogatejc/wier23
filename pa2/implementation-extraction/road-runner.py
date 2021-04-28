@@ -541,8 +541,8 @@ def road_runner(path_a, path_b, encoding, shouldPrint=False):
                     tag_a_start.placeholder = tag_a_start.word
                     tag_b_start.placeholder = tag_b_start.word
                 else:
-                    tag_a_start.placeholder = '#WORD'
-                    tag_b_start.placeholder = '#WORD'
+                    tag_a_start.placeholder = '#TEXT'
+                    tag_b_start.placeholder = '#TEXT'
 
                 indentation = save_tag(tag_a_start, indentation, False, tags)
 
