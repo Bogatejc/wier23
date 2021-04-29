@@ -1,3 +1,4 @@
+import copy
 import io
 import re
 from typing import List
@@ -17,6 +18,9 @@ HTML_TAG_CLASS_REGEX = 'class=".+"'
 class Tag(object):
 
     def __new__(cls, tag_start, tag_end, text, opt=False):
+        if text is None:
+            return super(Tag, cls).__new__(cls)
+
         if tag_start is not None:
             instance = super(Tag, cls).__new__(cls)
             instance.name = extract_tag_name(tag_start).upper()
@@ -270,6 +274,18 @@ def find_previous_index(tag_name, tags_list: List[Tag]):
     return len(tags_list) - 1 - tmp, tmp
 
 
+def find_previous_index_new(tag, idx, tags_list: List[Tag]):
+    length = 0
+    while idx >= 0:
+        if tags_list[idx].name == tag.name and tags_list[idx].indent == tag.indent:
+            return idx, length
+
+        idx -= 1
+        length += 1
+
+    return idx, length
+
+
 def check_if_match(tag_a: Tag, tag_b: Tag, idx_a, idx_b, tags_list_a, tags_list_b, tags_list: List[Tag], text_a,
                    text_b):
     matching = True
@@ -388,6 +404,8 @@ def save_tag(tag: Tag, ind, tags):
 
         if tags[-1].name == tag.name:
             tags[-1].quantity = 'multiple'
+            if not tag.optional:
+                tags[-1].optional = False
         else:
             ind += 1
             tag.indent = ind
@@ -617,53 +635,91 @@ def road_runner(path_a, path_b, encoding, shouldPrint=False, file=None):
 
         tag_a = Tag(tags_a[index_a], tags_a[index_a + 1], text_a)
         tag_b = Tag(tags_b[index_b], tags_b[index_b + 1], text_b)
-        
-        matching = False
+
         if tag_a is not None and tag_b is not None and tag_a.__eq__(tag_b):
 
-            if len(tags) > 0 and tags[-1].__is_closing__(tag_a):
-                index_a, index_b, matching = check_if_match(tag_a, tag_b, index_a, index_b, tags_a, tags_b, tags, text_a, text_b)
+            if tag_a.word == tag_b.word:
+                tag_a.placeholder = tag_a.word
+                tag_b.placeholder = tag_b.word
+            else:
+                tag_a.placeholder = '#TEXT'
+                tag_b.placeholder = '#TEXT'
 
-            elif len(tags) > 0 and tags[-1].__is_closing__(tag_b):
-                index_a, index_b, matching = check_if_match(tag_b, tag_a, index_b, index_a, tags_b, tags_a, tags, text_b, text_a)
-
-            if not matching:
-                if tag_a.word == tag_b.word:
-                    tag_a.placeholder = tag_a.word
-                    tag_b.placeholder = tag_b.word
-                else:
-                    tag_a.placeholder = '#TEXT'
-                    tag_b.placeholder = '#TEXT'
-
-                indentation = save_tag(tag_a, indentation, tags)
+            indentation = save_tag(tag_a, indentation, tags)
 
         elif tag_a is not None:
 
-            if len(tags) > 0 and tags[-1].__is_closing__(tag_a):
-                index_a, index_b, matching = check_if_match(tag_a, tag_b, index_a, index_b, tags_a, tags_b, tags, text_a, text_b)
+            tag_a.placeholder = tag_a.word
+            tag_a.optional = True
 
-            if not matching:
-                tag_a.placeholder = tag_a.word
-                tag_a.optional = True
-
-                indentation = save_tag(tag_a, indentation, tags)
+            indentation = save_tag(tag_a, indentation, tags)
 
         elif tag_b is not None:
 
-            if len(tags) > 0 and tags[-1].__is_closing__(tag_b):
-                index_a, index_b, matching = check_if_match(tag_a, tag_b, index_a, index_b, tags_a, tags_b, tags, text_a, text_b)
+            tag_b.placeholder = tag_b.word
+            tag_b.optional = True
 
-            if not matching:
-                tag_b.placeholder = tag_b.word
-                tag_b.optional = True
-
-                indentation = save_tag(tag_b, indentation, tags)
+            indentation = save_tag(tag_b, indentation, tags)
 
         else:
             if shouldPrint: print('ERROR: Both tags are None.')
 
         index_a += 1
         index_b += 1
+
+    index_tag = 0
+    while index_tag < len(tags) - 1:
+
+        if tags[index_tag].__is_closing__(tags[index_tag + 1]):
+            prev_index, length = find_previous_index_new(tags[index_tag + 1], index_tag, tags)
+
+            update_list: List = [None] * 2 * (length + 1)
+            matching = True
+
+            for i in range(prev_index, prev_index + length + 1):
+                tag_p: Tag = tags[i]
+                tag_a: Tag = tags[i + length + 1]
+
+                tag_new = Tag(None, None, None)
+                tag_new.indent = tag_p.indent
+                tag_new.quantity = tag_p.quantity
+                tag_new.name = tag_p.name
+                tag_new.prefix = ''
+                tag_new.suffix = ''
+                tag_new.optional = tag_p.optional
+
+                if tag_p.name == tag_a.name \
+                        and tag_p.placeholder == tag_a.placeholder \
+                        and tag_p.indent == tag_a.indent:
+                    tag_new.placeholder = tag_p.placeholder
+                    update_list[i - prev_index] = tag_new
+
+                elif tag_p.name == tag_a.name \
+                        and tag_p.indent == tag_a.indent:
+                    tag_new.placeholder = '#TEXT'
+                    update_list[i - prev_index] = tag_new
+
+                else:
+                    matching = False
+                    break
+
+            if matching:
+
+                update_list[0].prefix = '('
+                update_list[index_tag - prev_index].suffix = ')*'
+
+                tmp = 0
+                for i in range(prev_index, prev_index + 2 * (length + 1)):
+                    if update_list[i - prev_index] is not None:
+                        tags[i] = update_list[i - prev_index]
+                    else:
+                        del tags[i - tmp]
+                        tmp += 1
+
+            else:
+                index_tag += 1
+        else:
+            index_tag += 1
 
     if file is not None:
         with open(file, 'w', encoding=encoding) as f:
@@ -680,4 +736,4 @@ def road_runner(path_a, path_b, encoding, shouldPrint=False, file=None):
 
 if __name__ == '__main__':
     # road_runner('../input-extraction/car1.html', '../input-extraction/car2.html', UTF, shouldPrint=True, file='output.txt')
-    road_runner('../input-extraction/car1.html', '../input-extraction/car2.html', UTF, shouldPrint=False)
+    road_runner('../input-extraction/jewelry01.html', '../input-extraction/jewelry02.html', WINDOWS, shouldPrint=False)
