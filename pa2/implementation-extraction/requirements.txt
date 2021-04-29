@@ -1,4 +1,2 @@
 bs4
-re
-json
 lxml
