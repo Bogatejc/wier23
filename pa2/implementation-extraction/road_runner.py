@@ -1,4 +1,3 @@
-import copy
 import io
 import re
 from typing import List
@@ -415,7 +414,7 @@ def save_tag(tag: Tag, ind, tags):
     return ind
 
 
-def road_runner(path_a, path_b, encoding, shouldPrint=False, file=None):
+def road_runner(path_a, path_b, encoding=UTF, shouldPrint=False, file=None):
     """
     Runs the road runner algorithm and prints the result to stdout.
     :param path_a: Path to the first file
@@ -622,6 +621,8 @@ def road_runner(path_a, path_b, encoding, shouldPrint=False, file=None):
         index_a += 1
         index_b += 1
 
+    if shouldPrint: print('\n-----------------------------------------------------')
+
     tags_a.append(None)
     tags_b.append(None)
 
@@ -735,5 +736,5 @@ def road_runner(path_a, path_b, encoding, shouldPrint=False, file=None):
 
 
 if __name__ == '__main__':
-    # road_runner('../input-extraction/car1.html', '../input-extraction/car2.html', UTF, shouldPrint=True, file='output.txt')
-    road_runner('../input-extraction/jewelry01.html', '../input-extraction/jewelry02.html', WINDOWS, shouldPrint=False)
+    # road_runner('../input-extraction/testA.html', '../input-extraction/testB.html', UTF, shouldPrint=True, file='output.txt')
+    road_runner('../input-extraction/testA.html', '../input-extraction/testB.html', UTF, shouldPrint=True)
