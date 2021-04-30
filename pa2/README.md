@@ -7,6 +7,7 @@ web pages.
 The repository contains the following folders and files:
 - `implementation-extraction` contains code that implements the assignment
 - `input-extraction` contains html files used for extracting
+- `output-extraction` contains extraction results
 - `report-extraction.docx` report in word format
 - `report-extraction.pdf` report in pdf format
 
@@ -20,15 +21,18 @@ pip install -r ./implementation-extraction/requirements.txt
 
 ### General
 
-After dependencies are successfully installed, you can run the extraction program:
+After dependencies are successfully installed, move to `implementation-extraction` folder, and then you can run the 
+extraction program with:
 ```shell
-python ./implementation-extraction/run-extraction.py <ARG>
+python ./run-extraction.py <ARG>
 ```
 
 Where `<ARG>` presents one of the possible arguments `A`, `B` or `C`:
 * `A` returns extracted data from the 6 web pages using regular expressions
 * `B` returns extracted data from the 6 web pages using xpath
-* `C` returns generation of extraction rules for the 6 web pages using road runner algorithm
+* `C` returns generation of extraction rules for the 3 pairs of web pages using road runner algorithm
+
+All results are also saved to `output-extraction` folder.
 
 (**Warning**: If you run the program from a different folder, you will also need to change file paths specified in the program)
 
