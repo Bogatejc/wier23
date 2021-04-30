@@ -4,9 +4,11 @@ assignment we implemented data extraction using regular expression, xpath and ro
 web pages.
 
 ## Repository structure
-The repository contains the following folders:
+The repository contains the following folders and files:
 - `implementation-extraction` contains code that implements the assignment
 - `input-extraction` contains html files used for extracting
+- `report-extraction.docx` report in word format
+- `report-extraction.pdf` report in pdf format
 
 ## Instructions
 For running this project you need to have installed dependencies listed in `requirements.txt`. You can install
