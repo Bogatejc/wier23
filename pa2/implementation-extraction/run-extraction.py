@@ -115,8 +115,8 @@ def main(extraction_type):
         WINDOWS = 'windows-1252'
         UTF = 'utf-8'
         print("Generation of extraction rules for Overstock using road runner:")
-        road_runner('../input-extraction/jewelry01.html', '../input-extraction/jewelry01.html', WINDOWS)
-        road_runner('../input-extraction/jewelry01.html', '../input-extraction/jewelry01.html', WINDOWS,
+        road_runner('../input-extraction/jewelry01.html', '../input-extraction/jewelry02.html', WINDOWS)
+        road_runner('../input-extraction/jewelry01.html', '../input-extraction/jewelry02.html', WINDOWS,
                     file='../output-extraction/result_road_runner_overstock.txt')
 
         print("Generation of extraction rules for Rtvslo using road runner:")
