@@ -3,7 +3,7 @@ This is the implementation of second programming assignment for course Web infor
 assignment we implemented data extraction using regular expression, xpath and road runner algorithm for six different
 web pages.
 
-## Repository structure
+## Project structure
 The repository contains the following folders and files:
 - `implementation-extraction` contains code that implements the assignment
 - `input-extraction` contains html files used for extracting
