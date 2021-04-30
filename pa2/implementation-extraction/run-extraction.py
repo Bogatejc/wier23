@@ -5,8 +5,9 @@ import regular
 import xpath
 from road_runner import road_runner
 
+
 def main(extraction_type):
-    if(extraction_type == 'A'):
+    if extraction_type == 'A':
         html = ""
         print("Regex extraction from Overstock page 1:")
         with io.open('./input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
@@ -25,7 +26,8 @@ def main(extraction_type):
         print(json.dumps(json.loads(res), indent=4))
 
         print("Regex extraction from Rtvslo page 1:")
-        with io.open('./input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+        with io.open('./input-extraction/car1.html', mode='r',
+                     encoding='utf-8') as file:
             html = file.read()
         res = regular.extract_from_rtvslo(html)
         with io.open('result_regex_rtvslo1.json', 'w') as f:
@@ -33,7 +35,8 @@ def main(extraction_type):
         print(json.dumps(json.loads(res), indent=4))
 
         print("Regex extraction from Rtvslo page 2:")
-        with io.open('./input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+        with io.open('./input-extraction/car2.html',
+                     mode='r', encoding='utf-8') as file:
             html = file.read()
         res = regular.extract_from_rtvslo(html)
         with io.open('result_regex_rtvslo2.json', 'w') as f:
@@ -56,7 +59,7 @@ def main(extraction_type):
             json.dump(json.loads(res), f, indent=4)
         print(json.dumps(json.loads(res), indent=4))
 
-    elif(extraction_type == 'B'):
+    elif extraction_type == 'B':
         html = ""
         print("Xpath extraction from Overstock page 1:")
         with io.open('./input-extraction/jewelry01.html', mode='r', encoding='windows-1252') as file:
@@ -75,7 +78,8 @@ def main(extraction_type):
         print(json.dumps(json.loads(res), indent=4))
 
         print("Xpath extraction from Rtvslo page 1:")
-        with io.open('./input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+        with io.open('./input-extraction/car1.html', mode='r',
+                     encoding='utf-8') as file:
             html = file.read()
         res = xpath.extract_from_rtvslo(html)
         with io.open('result_xpath_rtvslo1.json', 'w') as f:
@@ -83,7 +87,8 @@ def main(extraction_type):
         print(json.dumps(json.loads(res), indent=4))
 
         print("Xpath extraction from Rtvslo page 2:")
-        with io.open('./input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', mode='r', encoding='utf-8') as file:
+        with io.open('./input-extraction/car2.html',
+                     mode='r', encoding='utf-8') as file:
             html = file.read()
         res = xpath.extract_from_rtvslo(html)
         with io.open('result_xpath_rtvslo2.json', 'w') as f:
@@ -106,19 +111,22 @@ def main(extraction_type):
             json.dump(json.loads(res), f, indent=4)
         print(json.dumps(json.loads(res), indent=4))
 
-    elif(extraction_type == 'C'):
+    elif extraction_type == 'C':
         WINDOWS = 'windows-1252'
         UTF = 'utf-8'
         print("Generation of extraction rules for Overstock using road runner:")
-        road_runner('./input-extraction/jewelry01.html', './input-extraction/jewelry01.html', WINDOWS, True)
+        road_runner('./input-extraction/jewelry01.html', './input-extraction/jewelry01.html', WINDOWS)
 
         print("Generation of extraction rules for Rtvslo using road runner:")
-        road_runner('./input-extraction/Audi_A6_50_TDI_quattro_nemir_v_premijskem_razredu-RTVSLO.si.html', './input-extraction/Volvo XC 40_D4_AWD_momentum_suvereno_med_najboljše_v_razredu-RTVSLO.si.html', UTF, True)
+        road_runner('./input-extraction/car1.html',
+                    './input-extraction/car2.html',
+                    UTF)
 
         print("Generation of extraction rules for Žurnal24 using road runner:")
-        road_runner('./input-extraction/polo.html', './input-extraction/audi.html', UTF, True)
+        road_runner('./input-extraction/polo.html', './input-extraction/audi.html', UTF)
     else:
         print("Unknown extraction type. Possible extraction types are A, B or C!")
+
 
 if __name__ == '__main__':
     main(sys.argv[1])

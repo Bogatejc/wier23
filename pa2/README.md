@@ -15,7 +15,7 @@ For running this project you need to have installed dependencies listed in `requ
 them using pip:
 
 ```shell
-pip install -r requirements.txt
+pip install -r ./implementation-extraction/requirements.txt
 ```
 
 ### General
