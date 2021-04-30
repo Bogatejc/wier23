@@ -116,14 +116,15 @@ def main(extraction_type):
         UTF = 'utf-8'
         print("Generation of extraction rules for Overstock using road runner:")
         road_runner('./input-extraction/jewelry01.html', './input-extraction/jewelry01.html', WINDOWS)
+        road_runner('./input-extraction/jewelry01.html', './input-extraction/jewelry01.html', WINDOWS, file='result_road_runner_overstock.txt')
 
         print("Generation of extraction rules for Rtvslo using road runner:")
-        road_runner('./input-extraction/car1.html',
-                    './input-extraction/car2.html',
-                    UTF)
+        road_runner('./input-extraction/car1.html', './input-extraction/car2.html', UTF)
+        road_runner('./input-extraction/car1.html', './input-extraction/car2.html', UTF, file='result_road_runner_rtvslo.txt')
 
         print("Generation of extraction rules for Žurnal24 using road runner:")
         road_runner('./input-extraction/polo.html', './input-extraction/audi.html', UTF)
+        road_runner('./input-extraction/polo.html', './input-extraction/audi.html', UTF, file='result_road_runner_zurnal.txt')
     else:
         print("Unknown extraction type. Possible extraction types are A, B or C!")
 
