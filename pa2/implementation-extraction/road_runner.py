@@ -499,7 +499,7 @@ def road_runner(path_a, path_b, encoding=UTF, shouldPrint=False, file=None):
             index_a += 1
             index_b += 1
             if shouldPrint: print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
-            tags_a.insert(index_b, None)
+            tags_a.insert(index_a, None)
 
         # SELF-CLOSING and OPENING
         elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_OPENING_TAGS_REGEX, tag_b_name):
