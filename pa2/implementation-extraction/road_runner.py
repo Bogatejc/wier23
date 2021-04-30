@@ -458,6 +458,9 @@ def road_runner(path_a, path_b, encoding=UTF, shouldPrint=False, file=None):
     counter_same = 0
     max_opening_size_diff = abs(len(tags_a) - len(tags_b)) * gamma
 
+    if shouldPrint: print(f'{len(tags_a)} : {len(tags_b)} ({min(len(tags_a), len(tags_b)) * 100 / max(len(tags_a), len(tags_b)):.2f} %)')
+    if shouldPrint: print('-----------------------------------------------------')
+
     while index_a < len(tags_a) and index_b < len(tags_b):
 
         tag_a = tags_a[index_a]
@@ -491,8 +494,12 @@ def road_runner(path_a, path_b, encoding=UTF, shouldPrint=False, file=None):
 
         # SELF-CLOSING and SELF-CLOSING
         elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_SELF_CLOSING_REGEX, tag_b_name):
-            if shouldPrint: print(
-                f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {tag_a_name:>10} : {"None":<10} {f"({len(stack_b)})":>5}')
+            tags_b.insert(index_b, None)
+            index_a += 1
+            index_b += 1
+            if shouldPrint: print(f'{f"({len(stack_a)})":<5} {"None":>10} : {tag_b_name:<10} {f"({len(stack_b)})":>5}')
+            tags_a.insert(index_b, None)
 
         # SELF-CLOSING and OPENING
         elif re.match(HTML_SELF_CLOSING_REGEX, tag_a_name) and re.match(HTML_OPENING_TAGS_REGEX, tag_b_name):
