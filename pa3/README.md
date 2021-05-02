@@ -1,0 +1,3 @@
+# Project description
+This is the implementation of third programming assignment for course Web information extraction and retrieval. In this 
+assignment we implemented...
