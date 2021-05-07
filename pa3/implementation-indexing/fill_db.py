@@ -60,7 +60,7 @@ def process_htmls():
                         if not exists:
                             cursor.execute(insert_word, (word,))
 
-                        cursor.execute(insert_page, (word, file, len(indexes), ';'.join(indexes)))
+                        cursor.execute(insert_page, (word, root.split('\\')[1] + '/' + file, len(indexes), ';'.join(indexes)))
 
             connection.commit()
 
