@@ -6,8 +6,17 @@ from bs4 import BeautifulSoup
 
 def normalize_text(text: str) -> str:
     normalized = text.strip()
-    normalized = re.sub('\\s+', ' ', normalized)
+    normalized = re.sub('[,!?.;]', ' ', normalized)
+    normalized = re.sub('\s+', ' ', normalized)
+    normalized = re.sub('\+', '\\+', normalized)
     return normalized.lower()
+
+
+def normalize_text_upper(text: str) -> str:
+    normalized = text.strip()
+    normalized = re.sub('\s+', ' ', normalized)
+    # normalized = re.sub('\+', '\\+', normalized)
+    return normalized
 
 
 tokenize_text = lambda text: nltk.tokenize.word_tokenize(text)
@@ -25,5 +34,4 @@ def get_html_text(file: str) -> str:
         for noscript in soup.select('noscript'):
             noscript.extract()
 
-        # TODO additional parsing
-    return soup.get_text()
+    return soup.get_text(separator=' ')

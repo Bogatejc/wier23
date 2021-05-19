@@ -42,7 +42,7 @@ def process_htmls():
 
     for root, sub_folders, files in os.walk(FILES_LOCATION):
         for file in files:
-            if file.endswith('.1.html'):
+            if file.endswith('.html'):
                 file_path = os.path.join(root, file)
                 html_text = processor.get_html_text(file_path)
 
@@ -52,15 +52,21 @@ def process_htmls():
 
                 for word in words:
                     if re.match('\\w+', word):
-                        indexes = [str(x.start()) for x in re.finditer(word, normalized_text)]
+                        try:
+                            indexes = [str(x.start()) for x in re.finditer(word, normalized_text)]
 
-                        cursor.execute(word_exists, (word,))
-                        exists = cursor.fetchall()
+                            cursor.execute(word_exists, (word,))
+                            exists = cursor.fetchall()
 
-                        if not exists:
-                            cursor.execute(insert_word, (word,))
+                            if not exists:
+                                cursor.execute(insert_word, (word,))
 
-                        cursor.execute(insert_page, (word, root.split('\\')[1] + '/' + file, len(indexes), ';'.join(indexes)))
+                            cursor.execute(insert_page,
+                                           (word, root.split('\\')[1] + '/' + file, len(indexes), ';'.join(indexes)))
+
+                        except re.error:
+                            print(re.error)
+                            print(f'Error: Skipping: {word} ({file_path})')
 
             connection.commit()
 
@@ -77,6 +83,3 @@ if __name__ == '__main__':
         cursor = connection.cursor()
         init_db()
         process_htmls()
-
-
-
