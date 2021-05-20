@@ -14,8 +14,9 @@ def normalize_text(text: str) -> str:
 
 def normalize_text_upper(text: str) -> str:
     normalized = text.strip()
+    normalized = re.sub('[,!?.;]', ' ', normalized)
     normalized = re.sub('\s+', ' ', normalized)
-    # normalized = re.sub('\+', '\\+', normalized)
+    normalized = re.sub('\+', '\\+', normalized)
     return normalized
 
 
