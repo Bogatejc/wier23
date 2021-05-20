@@ -5,14 +5,21 @@ import processor
 from time import time
 
 DB_LOCATION = 'inverted-index.db'
+NUM_OF_RESULTS = 10
 
 connection = sqlite3.connect(DB_LOCATION)
 cursor = connection.cursor()
 
 
-def find_word(word: str) -> list:
-    sql = 'SELECT * FROM Posting where word = ? ORDER BY frequency DESC'
-    cursor.execute(sql, (word,))
+def find_word(words_: list) -> list:
+    sql = f'''SELECT SUM(frequency) AS "frequencies", documentName, group_concat(indexes) FROM Posting
+             WHERE {"or ".join(["word LIKE ?"] * len(words_))}
+             GROUP BY documentName
+             ORDER BY frequencies DESC
+             LIMIT {NUM_OF_RESULTS}
+             '''
+
+    cursor.execute(sql, words_)
     return cursor.fetchall()
 
 
@@ -20,35 +27,36 @@ def find(words_: list):
     time_query = 0
     start_time = time()
     results = {}
-    done_words = set()
-    for word in words_:
-        start_time_query = time()
-        docs = find_word(word)
-        time_query += time() - start_time_query
-        for doc in docs:
-            indexes = list(map(int, doc[3].split(";")))[:5]
-            file_name = doc[1]
 
-            if file_name not in results:
-                results[file_name] = [0, []]
+    start_time_query = time()
+    docs = find_word(list(words_))
+    time_query += time() - start_time_query
 
-            results[file_name][0] += doc[2]
+    for doc in docs:
+        file_name = doc[1]
 
-            html_text = processor.get_html_text('PA3-data\\' + file_name)
-            normalized_text = processor.normalize_text_upper(html_text)
+        if file_name not in results:
+            results[file_name] = [doc[0], []]
 
-            for index in indexes:
+        html_text = processor.get_html_text('PA3-data\\' + file_name)
+        normalized_text = processor.normalize_text_upper(html_text)
+
+        done_words = set()
+        word_indexes = doc[2].split(",")
+        for word_index in word_indexes:
+            current_word = None
+            for index in list(map(int, word_index.split(";", 5)[:5])):
                 # Create snippet
                 text_before = normalized_text[max(index - 100, 0): index]
-                org_word = normalized_text[index: index + len(word)]
-                text_after = normalized_text[index + len(word) + 1: min(index + 100, len(normalized_text))]
+                text_after = normalized_text[index: min(index + 100, len(normalized_text))]
 
-                words_before = processor.tokenize_text(text_before)
-                words_after = processor.tokenize_text(text_after)
+                words_before = processor.tokenize_text(text_before)[-3:]
+                words_after = processor.tokenize_text(text_after)[:4]
+                current_word = text_after[0]
 
                 # Check for intersections between snippets
                 should_continue = False
-                for x in [y.lower() for y in words_before[-3:] + words_after[:3]]:
+                for x in [y.lower() for y in words_before + words_after[1:]]:
                     if x in done_words:
                         should_continue = True
                         break
@@ -56,13 +64,9 @@ def find(words_: list):
                 if should_continue:
                     continue
 
-                tmp = words_before[-3:]
-                tmp.append(org_word)
-                tmp.extend(words_after[:3])
+                results[file_name][1].append(' '.join(words_before + words_after))
 
-                results[file_name][1].append(' '.join(tmp))
-
-        done_words.add(word)
+            done_words.add(current_word)
 
     return results, time_query * 1000, time() - start_time
 
@@ -74,13 +78,18 @@ def print_results(search_query, results: dict, time_query, time_whole):
     header = f'\t{"Frequencies":<15}{"Document":<45}{"Snippet":<150}'
     print(header)
     print('\t' + '-' * len(header))
-    for page, result in sorted(results.items(), key=lambda x: x[1][0], reverse=True):
+    
+    # for page, result in sorted(results.items(), key=lambda x: x[1][0], reverse=True):
+    #     print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
+
+    for page, result in results.items():
         print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
 
 
 if __name__ == '__main__':
-    query = "Sistem SPOT"
+    # query = "Sistem SPOT"
     query = "predelovalne dejavnosti"
+    # query = "trgovina"
 
     if len(sys.argv) > 1:
         query = sys.argv[1]

@@ -11,7 +11,9 @@ FILES_LOCATION = 'PA3-data'
 def find(query_words: str):
     time_query = 0
     start_time = time()
-    results = {}
+
+    file_indexes_dict = {}
+    # Search for indexes
     for root, sub_folders, files in os.walk(FILES_LOCATION):
         for file_name in files:
             if file_name.endswith('.html'):
@@ -23,33 +25,51 @@ def find(query_words: str):
                 tokens = processor.tokenize_text(normalized_text)
                 words_ = processor.remove_stop_words(tokens)
 
+                # Find indexes for query words
                 for query_word in query_words:
-                    # TODO similar to fill_db.py but for each query_word track in dictionary for each file info you need
                     if query_word in words_:
                         start_time_query = time()
                         indexes = [int(x.start()) for x in re.finditer(query_word, normalized_text)]
                         time_query += time() - start_time_query
 
-                        if file_name not in results:
-                            results[file_name] = [0, []]
+                        if file_name not in file_indexes_dict:
+                            file_indexes_dict[file_name] = [[], [], 0]
 
-                        results[file_name][0] += len(indexes)
+                        file_indexes_dict[file_name][0].append(indexes)
+                        file_indexes_dict[file_name][1].append(normalized_text_upper)
+                        file_indexes_dict[file_name][2] += len(indexes)
 
-                        for index in indexes:
-                            # Create snippet
-                            text_before = normalized_text_upper[max(index - 100, 0): index]
-                            org_word = normalized_text_upper[index: index + len(query_word)]
-                            text_after = normalized_text_upper[
-                                         index + len(query_word) + 1: min(index + 100, len(normalized_text_upper))]
+    # Create snippets
+    results = {}
+    for file_name, [word_indexes, normalized_texts, frequency] in sorted(file_indexes_dict.items(), key=lambda x: x[1][2], reverse=True)[:10]:
+        if file_name not in results:
+            results[file_name] = [frequency, []]
 
-                            words_before = processor.tokenize_text(text_before)
-                            words_after = processor.tokenize_text(text_after)
+        done_words = set()
+        for word_index, normalized_text_upper in zip(word_indexes, normalized_texts):
+            current_word = None
+            for index in word_index:
+                # Create snippet
+                text_before = normalized_text_upper[max(index - 100, 0): index]
+                text_after = normalized_text_upper[index: min(index + 100, len(normalized_text_upper))]
 
-                            tmp = words_before[-3:]
-                            tmp.append(org_word)
-                            tmp.extend(words_after[:3])
+                words_before = processor.tokenize_text(text_before)[-3:]
+                words_after = processor.tokenize_text(text_after)[:4]
+                current_word = text_after[0]
 
-                            results[file_name][1].append(' '.join(tmp))
+                # Check for intersections between snippets
+                should_continue = False
+                for x in [y.lower() for y in words_before + words_after[1:]]:
+                    if x in done_words:
+                        should_continue = True
+                        break
+
+                if should_continue:
+                    continue
+
+                results[file_name][1].append(' '.join(words_before + words_after))
+
+            done_words.add(current_word)
 
     return results, time_query * 1000, time() - start_time
 
@@ -61,7 +81,11 @@ def print_results(search_query, results: dict, time_query, time_whole):
     header = f'\t{"Frequencies":<15}{"Document":<45}{"Snippet":<150}'
     print(header)
     print('\t' + '-' * len(header))
-    for page, result in sorted(results.items(), key=lambda x: x[1][0], reverse=True):
+    
+    # for page, result in sorted(results.items(), key=lambda x: x[1][0], reverse=True):
+    #     print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
+
+    for page, result in results.items():
         print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
 
 
