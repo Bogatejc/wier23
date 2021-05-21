@@ -27,7 +27,7 @@ pip install -r ./implementation-indexing/requirements.txt
 After dependencies are successfully installed, move to `implementation-indexing` folder. From there, you can run the inverted index search with:
 ```bash
 python ./run-sqlite-search.py <ARG>
-# Example: python ./run-sqlite-search.py Republika Slovenija
+# Example: python ./run-sqlite-search.py "Republika Slovenija"
 ```
 Where `<ARG>` present the search query. Similarly you can run the basic search, without reverse index:
 ```bash
