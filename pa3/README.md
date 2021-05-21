@@ -1,10 +1,13 @@
 # Project description
 This is the implementation of third programming assignment for course Web information extraction and retrieval. In this 
-assignment we implemented a simple inverse index for finding relevant text files.
+assignment we implemented a simple inverse index for finding relevant documents.
 
 ## Project structure
 - `implementation-indexing` contains code that implements the assignment
 - `implementation-indexing/inverted-index.db` created sqlite database used for inverse index
+- `implementation-indexing/fill_db.py` program that creates and fills the database
+- `implementation-indexing/run-sqlite-search.py` program that searches the documents using inverse index 
+- `implementation-indexing/run-basic-search.py` program that searched the documents sequentially
 - `report-indexing.pdf` report in pdf
 
 ## Instructions
