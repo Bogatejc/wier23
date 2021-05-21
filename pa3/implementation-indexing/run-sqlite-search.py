@@ -24,13 +24,10 @@ def find_word(words_: list) -> list:
 
 
 def find(words_: list):
-    time_query = 0
     start_time = time()
     results = {}
 
-    start_time_query = time()
     docs = find_word(list(words_))
-    time_query += time() - start_time_query
 
     for doc in docs:
         file_name = doc[1]
@@ -68,28 +65,27 @@ def find(words_: list):
 
             done_words.add(current_word)
 
-    return results, time_query * 1000, time() - start_time
+    return results, time() - start_time
 
 
-def print_results(search_query, results: dict, time_query, time_whole):
+def print_results(search_query, results: dict, time_whole):
     print(f'Results for a query: {search_query}\n\n')
-    print(f'\tResults found in {time_query:.0f} ms.')
-    print(f'\tSnippets built in: {time_whole:.2f} s.\n\n')
+    print(f'\tResults found in: {time_whole:.2f} s.\n\n')
     header = f'\t{"Frequencies":<15}{"Document":<45}{"Snippet":<150}'
     print(header)
     print('\t' + '-' * len(header))
-    
-    # for page, result in sorted(results.items(), key=lambda x: x[1][0], reverse=True):
-    #     print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
 
     for page, result in results.items():
         print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
 
 
 if __name__ == '__main__':
-    # query = "Sistem SPOT"
     query = "predelovalne dejavnosti"
     # query = "trgovina"
+    # query = "social services"
+    # query = "Republika Slovenija"
+    # query = "davek"
+    # query = "vloge in obvestila"
 
     if len(sys.argv) > 1:
         query = sys.argv[1]

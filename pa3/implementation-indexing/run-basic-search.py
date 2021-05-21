@@ -9,7 +9,6 @@ FILES_LOCATION = 'PA3-data'
 
 
 def find(query_words: str):
-    time_query = 0
     start_time = time()
 
     file_indexes_dict = {}
@@ -28,9 +27,7 @@ def find(query_words: str):
                 # Find indexes for query words
                 for query_word in query_words:
                     if query_word in words_:
-                        start_time_query = time()
                         indexes = [int(x.start()) for x in re.finditer(query_word, normalized_text)]
-                        time_query += time() - start_time_query
 
                         if file_name not in file_indexes_dict:
                             file_indexes_dict[file_name] = [[], [], 0]
@@ -41,7 +38,8 @@ def find(query_words: str):
 
     # Create snippets
     results = {}
-    for file_name, [word_indexes, normalized_texts, frequency] in sorted(file_indexes_dict.items(), key=lambda x: x[1][2], reverse=True)[:10]:
+    for file_name, [word_indexes, normalized_texts, frequency] in sorted(file_indexes_dict.items(),
+                                                                         key=lambda x: x[1][2], reverse=True)[:10]:
         if file_name not in results:
             results[file_name] = [frequency, []]
 
@@ -71,27 +69,27 @@ def find(query_words: str):
 
             done_words.add(current_word)
 
-    return results, time_query * 1000, time() - start_time
+    return results, time() - start_time
 
 
-def print_results(search_query, results: dict, time_query, time_whole):
+def print_results(search_query, results: dict, time_whole):
     print(f'Results for a query: {search_query}\n\n')
-    print(f'\tResults found in {time_query:.0f} ms.')
-    print(f'\tSnippets built in: {time_whole:.2f} s.\n\n')
+    print(f'\tResults found in: {time_whole:.2f} s.\n\n')
     header = f'\t{"Frequencies":<15}{"Document":<45}{"Snippet":<150}'
     print(header)
     print('\t' + '-' * len(header))
-    
-    # for page, result in sorted(results.items(), key=lambda x: x[1][0], reverse=True):
-    #     print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
 
     for page, result in results.items():
         print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
 
 
 if __name__ == '__main__':
-    query = "Sistem SPOT"
     query = "predelovalne dejavnosti"
+    # query = "trgovina"
+    # query = "social services"
+    # query = "Republika Slovenija"
+    # query = "davek"
+    # query = "vloge in obvestila"
 
     if len(sys.argv) > 1:
         query = sys.argv[1]
