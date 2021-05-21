@@ -80,16 +80,16 @@ def print_results(search_query, results: dict, time_whole):
     print('\t' + '-' * len(header))
 
     for page, result in results.items():
-        print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1])}')
+        print(f'\t{result[0]:<15}{page:<45}{" ... ".join(result[1][:5])}')
 
 
 if __name__ == '__main__':
-    query = "predelovalne dejavnosti"
+    # query = "predelovalne dejavnosti"
     # query = "trgovina"
     # query = "social services"
     # query = "Republika Slovenija"
     # query = "davek"
-    # query = "vloge in obvestila"
+    query = "vloge in obvestila"
 
     if len(sys.argv) > 1:
         query = sys.argv[1]
