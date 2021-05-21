@@ -35,7 +35,7 @@ def find(words_: list):
         if file_name not in results:
             results[file_name] = [doc[0], []]
 
-        html_text = processor.get_html_text('PA3-data\\' + file_name)
+        html_text = processor.get_html_text('PA3-data/' + file_name)
         normalized_text = processor.normalize_text_upper(html_text)
 
         done_words = set()
