@@ -15,7 +15,7 @@ nltk.download('stopwords')
 nltk.download('punkt')
 ```
 
-You also need to have SQLite driver and dependencies listed in `requirements.txt` installed. You can install them using pip:
+You also need to have SQLite driver and dependencies listed in `requirements.txt` installed. You can install the dependencies using pip:
 ```bash
 pip install -r ./implementation-indexing/requirements.txt
 ```
@@ -26,7 +26,7 @@ After dependencies are successfully installed, move to `implementation-indexing`
 python ./run-sqlite-search.py <ARG>
 # Example: python ./run-sqlite-search.py Republika Slovenija
 ```
-Where `<ARG>` present the search query. Similary you can run the basic search, without reverse index:
+Where `<ARG>` present the search query. Similarly you can run the basic search, without reverse index:
 ```bash
 python ./run-basic-search.py <ARG>
 ```
